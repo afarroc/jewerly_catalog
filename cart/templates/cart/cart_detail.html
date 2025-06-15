@@ -1,0 +1,116 @@
+{% extends 'home/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="page-header">Your Shopping Cart</h1>
+            
+            {% if cart.items.count > 0 %}
+            <div class="cart-table">
+                <div class="cart-header row">
+                    <div class="col-6 col-md-4">Product</div>
+                    <div class="col-2 col-md-2 text-center">Price</div>
+                    <div class="col-2 col-md-3 text-center">Quantity</div>
+                    <div class="col-2 col-md-2 text-center">Total</div>
+                    <div class="col-12 col-md-1"></div>
+                </div>
+                
+                {% for item in cart.items.all %}
+                <div class="cart-item row align-center">
+                    <div class="col-6 col-md-4">
+                        <div class="cart-product-info">
+                            {% if item.product.image %}
+                            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="cart-product-image">
+                            {% endif %}
+                            <div>
+                                <h4 class="cart-product-name">
+                                    <a href="{% url 'products:product_detail' item.product.id item.product.slug %}">
+                                        {{ item.product.name }}
+                                    </a>
+                                </h4>
+                                <p class="cart-product-meta">{{ item.product.jewelry_type|title }} - {{ item.product.material|title }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-2 col-md-2 text-center">
+                        <span class="cart-product-price">{{ item.product.display_price }}</span>
+                    </div>
+                    
+                    <div class="col-2 col-md-3 text-center">
+                        <form method="POST" action="{% url 'cart:cart_update' item.product.id %}" class="quantity-form">
+                            {% csrf_token %}
+                            <div class="quantity-selector">
+                                <button type="button" class="qty-btn minus" onclick="this.parentNode.querySelector('input[type=number]').stepDown()">-</button>
+                                <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="{{ item.product.stock }}" onchange="this.form.submit()">
+                                <button type="button" class="qty-btn plus" onclick="this.parentNode.querySelector('input[type=number]').stepUp()">+</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="col-2 col-md-2 text-center">
+                        <span class="cart-product-total">${{ item.total_price|floatformat:2 }}</span>
+                    </div>
+                    
+                    <div class="col-12 col-md-1 text-right">
+                        <form method="POST" action="{% url 'cart:cart_remove' item.product.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="remove-btn" title="Remove item">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+                
+                <div class="cart-footer row">
+                    <div class="col-12 col-md-6">
+                        <a href="{% url 'products:product_list' %}" class="btn outline-btn">
+                            <i class="fas fa-chevron-left"></i> Continue Shopping
+                        </a>
+                        <button form="clear-form" type="submit" class="btn danger-btn">
+                            <i class="fas fa-trash"></i> Clear Cart
+                        </button>
+                        <form id="clear-form" method="POST" action="{% url 'cart:cart_clear' %}">
+                            {% csrf_token %}
+                        </form>
+                    </div>
+                    
+                    <div class="col-12 col-md-6">
+                        <div class="cart-summary">
+                            <div class="summary-row">
+                                <span>Subtotal:</span>
+                                <span>${{ cart.subtotal|floatformat:2 }}</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Shipping:</span>
+                                <span>Calculated at checkout</span>
+                            </div>
+                            <div class="summary-row total">
+                                <span>Estimated Total:</span>
+                                <span>${{ cart.subtotal|floatformat:2 }}</span>
+                            </div>
+                            <a href="{% url 'orders:checkout' %}" class="btn primary-btn btn-block" {% if cart.total_items == 0 %}disabled{% endif %}>
+                                Proceed to Checkout <i class="fas fa-chevron-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="empty-cart">
+                <i class="fas fa-shopping-cart"></i>
+                <h3>Your cart is empty</h3>
+                <p>Browse our collection and add some beautiful items to your cart!</p>
+                <a href="{% url 'products:product_list' %}" class="btn primary-btn">
+                    Start Shopping
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+<!-- home/templates/home/index.html -->
+{% extends 'home/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    <section class="welcome-section">
+        <h2>{{ welcome_message }}</h2>
+        <p>Discover our unique collection of handcrafted fantasy jewelry pieces.</p>
+        <a href="{% url 'products:product_list' %}" class="btn">Browse All Products</a>
+    </section>
+
+    <section class="featured-products">
+        <h2>Featured Products</h2>
+        <div class="product-grid">
+            {% for product in featured_products %}
+            <div class="product-card">
+                <a href="{% url 'products:product_detail' product.id product.slug %}">
+                    {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-image">
+                    {% endif %}
+                    <h3>{{ product.name }}</h3>
+                </a>
+                <p>{{ product.jewelry_type|title }} - {{ product.material|title }}</p>
+                <p class="price">{{ product.display_price }}</p>
+                <a href="{% url 'products:product_detail' product.id product.slug %}" class="btn">View Details</a>
+            </div>
+            {% empty %}
+            <p>No featured products available at the moment.</p>
+            {% endfor %}
+        </div>
+    </section>
+{% endblock %}

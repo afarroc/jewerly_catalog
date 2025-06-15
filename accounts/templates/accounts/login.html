@@ -1,0 +1,35 @@
+{% extends 'accounts/auth_base.html' %}
+
+{% block auth_title %}Login to Your Account{% endblock %}
+
+{% block auth_content %}
+<form method="POST" class="auth-form">
+    {% csrf_token %}
+    
+    {% for field in form %}
+    {% if field.name != 'remember_me' %}
+    <div class="form-group">
+        {{ field.label_tag }}
+        {{ field }}
+        {% if field.errors %}
+        <div class="form-error">
+            {{ field.errors }}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+    {% endfor %}
+    
+    <div class="form-group remember-me">
+        {{ form.remember_me.label_tag }}
+        {{ form.remember_me }}
+    </div>
+    
+    <button type="submit" class="btn primary-btn btn-block">Login</button>
+</form>
+{% endblock %}
+
+{% block auth_links %}
+<p>Don't have an account? <a href="{% url 'accounts:register' %}">Register here</a></p>
+<p><a href="{% url 'password_reset' %}">Forgot your password?</a></p>
+{% endblock %}

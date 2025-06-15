@@ -1,0 +1,12 @@
+Order Cancelled #{{ order.order_number }}
+
+Your order at Fantasy Jewelry has been cancelled.
+
+Order Details:
+- Order Number: {{ order.order_number }}
+- Order Date: {{ order.created_at|date:"F j, Y" }}
+- Cancellation Date: {% now "F j, Y" %}
+
+If this was a mistake or you need any assistance, please contact our support team.
+
+© {% now "Y" %} Fantasy Jewelry. All rights reserved.

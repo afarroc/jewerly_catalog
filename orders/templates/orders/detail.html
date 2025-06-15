@@ -1,0 +1,233 @@
+{% extends 'home/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="order-detail-card">
+                <div class="order-header">
+                    <h1>Order #{{ order.order_number }}</h1>
+                    <div class="order-status">
+                        <span class="badge {{ order.status }}">{{ order.get_status_display }}</span>
+                        <span class="order-date">Placed on {{ order.created_at|date:"F j, Y" }}</span>
+                    </div>
+                </div>
+                
+                <div class="order-timeline">
+                    <div class="timeline-step {% if order.status != 'cancelled' %}active{% endif %}">
+                        <div class="timeline-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <h4>Order Placed</h4>
+                            <p>{{ order.created_at|date:"F j, Y" }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-step {% if order.status in ['processing', 'shipped', 'delivered'] %}active{% endif %}">
+                        <div class="timeline-icon">
+                            <i class="fas fa-cog"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <h4>Processing</h4>
+                            {% if order.status in ['processing', 'shipped', 'delivered'] %}
+                            <p>Processing your order</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-step {% if order.status in ['shipped', 'delivered'] %}active{% endif %}">
+                        <div class="timeline-icon">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <h4>Shipped</h4>
+                            {% if order.status == 'shipped' %}
+                            <p>Shipped on {{ order.updated_at|date:"F j, Y" }}</p>
+                            {% elif order.status == 'delivered' %}
+                            <p>Shipped</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-step {% if order.status == 'delivered' %}active{% endif %}">
+                        <div class="timeline-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="timeline-content">
+                            <h4>Delivered</h4>
+                            {% if order.status == 'delivered' %}
+                            <p>Delivered on {{ order.updated_at|date:"F j, Y" }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-12 col-md-6">
+                        <div class="order-section">
+                            <h3><i class="fas fa-truck"></i> Shipping Information</h3>
+                            <div class="shipping-address">
+                                {{ order.shipping_address|linebreaks }}
+                            </div>
+                            
+                            {% if order.tracking_number %}
+                            <div class="tracking-info">
+                                <h4>Tracking Information</h4>
+                                <p>Tracking Number: {{ order.tracking_number }}</p>
+                                <a href="#" class="btn outline-btn btn-sm">
+                                    Track Package
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="col-12 col-md-6">
+                        <div class="order-section">
+                            <h3><i class="fas fa-credit-card"></i> Payment Information</h3>
+                            <div class="payment-method">
+                                <p>Method: {{ order.get_payment_method_display }}</p>
+                                <p class="payment-status {% if order.payment_status %}paid{% else %}pending{% endif %}">
+                                    {% if order.payment_status %}
+                                    <i class="fas fa-check-circle"></i> Paid on {{ order.payment_date|date:"F j, Y" }}
+                                    {% else %}
+                                    <i class="fas fa-clock"></i> Payment Pending
+                                    {% endif %}
+                                </p>
+                            </div>
+                            
+                            <div class="billing-address">
+                                <h4>Billing Address</h4>
+                                {% if order.billing_address %}
+                                {{ order.billing_address|linebreaks }}
+                                {% else %}
+                                <p>Same as shipping address</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="order-items-section">
+                    <h3><i class="fas fa-box-open"></i> Order Items</h3>
+                    
+                    <div class="order-items">
+                        {% for item in order.items.all %}
+                        <div class="order-item">
+                            <div class="item-image">
+                                {% if item.product.image %}
+                                <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                                {% endif %}
+                            </div>
+                            <div class="item-details">
+                                <h4>{{ item.product.name }}</h4>
+                                <p>{{ item.product.jewelry_type|title }} - {{ item.product.material|title }}</p>
+                                <p>Quantity: {{ item.quantity }}</p>
+                            </div>
+                            <div class="item-price">
+                                <p>${{ item.price|floatformat:2 }}</p>
+                                <p class="item-total">${{ item.total_price|floatformat:2 }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="order-totals">
+                        <div class="total-row">
+                            <span>Subtotal:</span>
+                            <span>${{ order.subtotal|floatformat:2 }}</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Shipping:</span>
+                            <span>${{ order.shipping_cost|floatformat:2 }}</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Tax:</span>
+                            <span>${{ order.tax|floatformat:2 }}</span>
+                        </div>
+                        <div class="total-row grand-total">
+                            <span>Total:</span>
+                            <span>${{ order.total|floatformat:2 }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="order-notes">
+                    {% if order.notes %}
+                    <h3><i class="fas fa-sticky-note"></i> Order Notes</h3>
+                    <p>{{ order.notes }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="order-actions">
+                    <a href="{% url 'orders:order_history' %}" class="btn outline-btn">
+                        <i class="fas fa-chevron-left"></i> Back to Orders
+                    </a>
+                    <a href="{% url 'orders:order_invoice' order.id %}" class="btn primary-btn">
+                        <i class="fas fa-file-download"></i> Download Invoice
+                    </a>
+                    {% if order.status == 'pending' or order.status == 'processing' %}
+                    <button class="btn danger-btn" id="cancel-order-btn">
+                        <i class="fas fa-times-circle"></i> Cancel Order
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Order Modal -->
+<div class="modal" id="cancel-order-modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Cancel Order</h3>
+            <button class="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Are you sure you want to cancel this order?</p>
+            <p>This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn outline-btn close-modal">Go Back</button>
+            <form method="POST" action="{% url 'orders:cancel_order' order.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn danger-btn">Confirm Cancellation</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Cancel order modal
+    const cancelBtn = document.getElementById('cancel-order-btn');
+    const modal = document.getElementById('cancel-order-modal');
+    const closeBtns = document.querySelectorAll('.close-modal');
+    
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', function() {
+            modal.style.display = 'block';
+        });
+    }
+    
+    closeBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+    });
+    
+    window.addEventListener('click', function(event) {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends 'home/base.html' %}
+
+{% block title %}
+    {% if category %}{{ category.name }}{% else %}Products{% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <!-- Sidebar - 3 columns on desktop, 12 on mobile -->
+        <aside class="col-3 col-md-12 col-sm-12 mb-4">
+            <div class="sidebar-card">
+                <h3 class="sidebar-title">Categories</h3>
+                <ul class="category-list">
+                    <li {% if not category %}class="selected"{% endif %}>
+                        <a href="{% url 'products:product_list' %}">All Categories</a>
+                    </li>
+                    {% for c in categories %}
+                    <li {% if category.slug == c.slug %}class="selected"{% endif %}>
+                        <a href="{% url 'products:product_list_by_category' c.slug %}">
+                            {{ c.name }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Content - 9 columns on desktop, 12 on mobile -->
+        <main class="col-9 col-md-12 col-sm-12">
+            <div class="page-header">
+                <h1>{% if category %}{{ category.name }}{% else %}All Products{% endif %}</h1>
+            </div>
+            
+            <div class="row">
+                {% for product in products %}
+                <div class="col-4 col-md-6 col-sm-12 mb-4">
+                    <div class="product-card">
+                        <a href="{% url 'products:product_detail' product.id product.slug %}" class="product-link">
+                            {% if product.image %}
+                            <div class="product-image-container">
+                                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-image">
+                            </div>
+                            {% endif %}
+                            <div class="product-info">
+                                <h3 class="product-title">{{ product.name }}</h3>
+                                <p class="product-meta">{{ product.jewelry_type|title }} - {{ product.material|title }}</p>
+                                <p class="product-price">{{ product.display_price }}</p>
+                                {% if product.stock > 0 %}
+                                <span class="badge in-stock">In Stock</span>
+                                {% else %}
+                                <span class="badge out-of-stock">Out of Stock</span>
+                                {% endif %}
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12">
+                    <div class="empty-state">
+                        <i class="fas fa-gem empty-icon"></i>
+                        <p>No products available in this category.</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </main>
+    </div>
+{% endblock %}

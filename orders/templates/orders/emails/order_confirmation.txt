@@ -1,0 +1,26 @@
+Order Confirmation #{{ order.order_number }}
+
+Thank you for your order at Fantasy Jewelry!
+
+Order Details:
+- Order Number: {{ order.order_number }}
+- Order Date: {{ order.created_at|date:"F j, Y" }}
+- Status: {{ order.get_status_display }}
+
+Order Items:
+{% for item in order.items.all %}
+- {{ item.quantity }} × {{ item.product.name }} - ${{ item.total_price|floatformat:2 }}
+{% endfor %}
+
+Order Summary:
+- Subtotal: ${{ order.subtotal|floatformat:2 }}
+- Shipping: ${{ order.shipping_cost|floatformat:2 }}
+- Tax: ${{ order.tax|floatformat:2 }}
+- Total: ${{ order.total|floatformat:2 }}
+
+Shipping Information:
+{{ order.shipping_address }}
+
+If you have any questions about your order, please contact our support team.
+
+© {% now "Y" %} Fantasy Jewelry. All rights reserved.

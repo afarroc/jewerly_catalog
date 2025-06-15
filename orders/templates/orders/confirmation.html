@@ -1,0 +1,95 @@
+{% extends 'home/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="confirmation-card">
+                <div class="confirmation-header">
+                    <i class="fas fa-check-circle confirmation-icon"></i>
+                    <h1>Thank You for Your Order!</h1>
+                    <p class="order-number">Order #{{ order.order_number }}</p>
+                </div>
+                
+                <div class="confirmation-details">
+                    <div class="row">
+                        <div class="col-12 col-md-6">
+                            <div class="detail-section">
+                                <h3><i class="fas fa-truck"></i> Shipping Information</h3>
+                                <p>{{ order.shipping_address|linebreaks }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12 col-md-6">
+                            <div class="detail-section">
+                                <h3><i class="fas fa-credit-card"></i> Payment Method</h3>
+                                <p>{{ order.get_payment_method_display }}</p>
+                                <p class="payment-status {% if order.payment_status %}paid{% else %}pending{% endif %}">
+                                    {% if order.payment_status %}
+                                    <i class="fas fa-check-circle"></i> Paid on {{ order.payment_date|date:"F j, Y" }}
+                                    {% else %}
+                                    <i class="fas fa-clock"></i> Payment Pending
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="order-summary">
+                        <h3><i class="fas fa-receipt"></i> Order Summary</h3>
+                        
+                        <div class="order-items">
+                            {% for item in order.items.all %}
+                            <div class="order-item">
+                                <div class="item-image">
+                                    {% if item.product.image %}
+                                    <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                                    {% endif %}
+                                </div>
+                                <div class="item-details">
+                                    <h4>{{ item.product.name }}</h4>
+                                    <p>{{ item.quantity }} × ${{ item.price|floatformat:2 }}</p>
+                                </div>
+                                <div class="item-total">
+                                    ${{ item.total_price|floatformat:2 }}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="order-totals">
+                            <div class="total-row">
+                                <span>Subtotal:</span>
+                                <span>${{ order.subtotal|floatformat:2 }}</span>
+                            </div>
+                            <div class="total-row">
+                                <span>Shipping:</span>
+                                <span>${{ order.shipping_cost|floatformat:2 }}</span>
+                            </div>
+                            <div class="total-row">
+                                <span>Tax:</span>
+                                <span>${{ order.tax|floatformat:2 }}</span>
+                            </div>
+                            <div class="total-row grand-total">
+                                <span>Total:</span>
+                                <span>${{ order.total|floatformat:2 }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="confirmation-actions">
+                        <a href="{% url 'products:product_list' %}" class="btn outline-btn">
+                            <i class="fas fa-gem"></i> Continue Shopping
+                        </a>
+                        <a href="{% url 'accounts:profile' %}" class="btn primary-btn">
+                            <i class="fas fa-user"></i> View Order History
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

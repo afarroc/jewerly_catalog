@@ -1,0 +1,113 @@
+{% extends 'home/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-3 col-md-12 mb-4">
+            <div class="profile-sidebar">
+                <div class="profile-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <h3>{{ request.user.username }}</h3>
+                <p>{{ request.user.email }}</p>
+                <nav class="profile-nav">
+                    <a href="{% url 'accounts:profile' %}">Profile</a>
+                    <a href="{% url 'orders:order_history' %}" class="active">Order History</a>
+                    <a href="{% url 'accounts:profile_update' %}">Settings</a>
+                </nav>
+            </div>
+        </div>
+        
+        <div class="col-9 col-md-12">
+            <div class="order-history-card">
+                <h1>Order History</h1>
+                
+                {% if page_obj.object_list %}
+                <div class="orders-list">
+                    {% for order in page_obj.object_list %}
+                    <div class="order-item">
+                        <div class="order-header">
+                            <div class="order-meta">
+                                <span class="order-number">Order #{{ order.order_number }}</span>
+                                <span class="order-date">{{ order.created_at|date:"F j, Y" }}</span>
+                            </div>
+                            <div class="order-status">
+                                <span class="badge {{ order.status }}">{{ order.get_status_display }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="order-body">
+                            <div class="order-products">
+                                {% for item in order.items.all|slice:":3" %}
+                                <div class="product">
+                                    {% if item.product.image %}
+                                    <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                                    {% endif %}
+                                    <span>{{ item.quantity }} × {{ item.product.name }}</span>
+                                </div>
+                                {% endfor %}
+                                {% if order.items.count > 3 %}
+                                <div class="product-more">
+                                    +{{ order.items.count|add:"-3" }} more items
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="order-total">
+                                <span>Total:</span>
+                                <span>${{ order.total|floatformat:2 }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="order-actions">
+                            <a href="{% url 'orders:order_detail' order.id %}" class="btn outline-btn btn-sm">
+                                View Details
+                            </a>
+                            <a href="{% url 'orders:order_invoice' order.id %}" class="btn outline-btn btn-sm">
+                                Download Invoice
+                            </a>
+                            {% if order.status == 'pending' or order.status == 'processing' %}
+                            <a href="#" class="btn danger-btn btn-sm">
+                                Cancel Order
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Pagination -->
+                <div class="pagination">
+                    <span class="step-links">
+                        {% if page_obj.has_previous %}
+                            <a href="?page=1" class="btn outline-btn">&laquo; first</a>
+                            <a href="?page={{ page_obj.previous_page_number }}" class="btn outline-btn">previous</a>
+                        {% endif %}
+                        
+                        <span class="current">
+                            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                        </span>
+                        
+                        {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}" class="btn outline-btn">next</a>
+                            <a href="?page={{ page_obj.paginator.num_pages }}" class="btn outline-btn">last &raquo;</a>
+                        {% endif %}
+                    </span>
+                </div>
+                {% else %}
+                <div class="empty-orders">
+                    <i class="fas fa-box-open"></i>
+                    <h3>No Orders Yet</h3>
+                    <p>You haven't placed any orders yet. Start shopping to see your orders here!</p>
+                    <a href="{% url 'products:product_list' %}" class="btn primary-btn">
+                        Start Shopping
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

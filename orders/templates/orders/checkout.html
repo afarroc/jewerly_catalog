@@ -1,0 +1,172 @@
+{% extends 'home/base.html' %}
+{% load order_filters %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="page-header">Checkout</h1>
+            
+            <div class="checkout-steps">
+                <div class="step active">
+                    <span>1</span>
+                    <p>Review Order</p>
+                </div>
+                <div class="step">
+                    <span>2</span>
+                    <p>Shipping & Payment</p>
+                </div>
+                <div class="step">
+                    <span>3</span>
+                    <p>Confirmation</p>
+                </div>
+            </div>
+            
+            <div class="checkout-content">
+                <div class="row">
+                    <div class="col-12 col-md-7">
+                        <form method="POST" class="checkout-form">
+                            {% csrf_token %}
+                            
+                            <h2 class="section-title">Shipping Information</h2>
+                            <div class="form-group">
+                                {{ form.shipping_address.label_tag }}
+                                {{ form.shipping_address }}
+                                {{ form.shipping_address.errors }}
+                                {{ form.save_shipping }}
+                            </div>
+                            
+                            <h2 class="section-title">Billing Information</h2>
+                            <div class="form-group">
+                                <div class="billing-options">
+                                    {% for radio in form.billing_option %}
+                                    <div class="billing-option">
+                                        {{ radio.tag }}
+                                        <label for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            
+                            <div id="billing-address-section" 
+                                 style="display: {% if form.billing_option.value == 'different' %}block{% else %}none{% endif %};">
+                                <div class="form-group">
+                                    {{ form.billing_address.label_tag }}
+                                    {{ form.billing_address }}
+                                    {{ form.billing_address.errors }}
+                                    {{ form.save_billing }}
+                                </div>
+                            </div>
+                            
+                            <h2 class="section-title">Payment Method</h2>
+                            <div class="form-group payment-methods">
+                                {% for radio in form.payment_method %}
+                                <div class="payment-method">
+                                    {{ radio.tag }}
+                                    <label for="{{ radio.id_for_label }}">
+                                        <i class="fas fa-credit-card"></i> {{ radio.choice_label }}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <h2 class="section-title">Additional Notes</h2>
+                            <div class="form-group">
+                                {{ form.notes }}
+                            </div>
+                            
+
+
+                            <!-- Botón de Place Order mejorado -->
+                            <div class="place-order-section">
+                                <div class="terms-agreement">
+                                    <input type="checkbox" id="agree-terms" name="agree_terms" required>
+                                    <label for="agree-terms">
+                                      
+                                        Acepto los 
+                                        <a href="{% url 'orders:terms' %}" target="_blank">Terms and Conditions</a>
+                                </label>
+                                </div>
+                                
+                                <button type="submit" class="btn primary-btn btn-block" id="place-order-btn">
+                                    <i class="fas fa-lock"></i> Finalizar Compra
+                                </button>
+                                
+                                <div class="secure-checkout">
+                                    <i class="fas fa-shield-alt"></i>
+                                    <span>Compra segura - Tus datos están protegidos</span>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="col-12 col-md-5">
+                        <div class="order-summary">
+                            <h2 class="section-title">Order Summary</h2>
+                            
+                            <div class="order-items">
+                                {% for item in cart.items.all %}
+                                <div class="order-item">
+                                    <div class="item-image">
+                                        {% if item.product.image %}
+                                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                                        {% endif %}
+                                    </div>
+                                    <div class="item-details">
+                                        <h4>{{ item.product.name }}</h4>
+                                        <p>{{ item.quantity }} × ${{ item.product.price|floatformat:2 }}</p>
+                                    </div>
+                                    <div class="item-total">
+                                        ${{ item.total_price|floatformat:2 }}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="order-totals">
+                                <div class="total-row">
+                                    <span>Subtotal:</span>
+                                    <span>${{ cart.subtotal|floatformat:2 }}</span>
+                                </div>
+                                <div class="total-row">
+                                    <span>Shipping:</span>
+                                    <span>$5.00</span>
+                                </div>
+                                <div class="total-row">
+                                    <span>Tax:</span>
+                                    <span>${{ cart.subtotal|multiply:0.08|floatformat:2 }}</span>
+                                </div>
+                                <div class="total-row grand-total">
+                                    <span>Total:</span>
+                                    <span>${{ cart.subtotal|add:5|add:cart.subtotal|multiply:0.08|floatformat:2 }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Toggle billing address section
+    const billingOptions = document.querySelectorAll('input[name="billing_option"]');
+    const billingSection = document.getElementById('billing-address-section');
+    
+    billingOptions.forEach(option => {
+        option.addEventListener('change', function() {
+            if (this.value === 'different') {
+                billingSection.style.display = 'block';
+            } else {
+                billingSection.style.display = 'none';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
