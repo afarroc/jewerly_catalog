@@ -1,7 +1,6 @@
-# Crear un archivo .gitignore (evitar subir archivos sensibles)
-echo "__pycache__/" >> .gitignore
-echo "*.py[cod]" >> .gitignore
-echo "*.sqlite3" >> .gitignore
-echo "env/" >> .gitignore
-echo ".env" >> .gitignore
-echo "media/" >> .gitignore
+__pycache__/
+*.py[cod]
+*.sqlite3
+env/
+.env
+media/
