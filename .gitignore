@@ -1,15 +1,35 @@
+# Python
 __pycache__/
 *.py[cod]
-*.sqlite3
-venv/
-env/
-.env
-media/
+*.pyo
+*.pyd
+*.py,cover
 
-.env
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+
+# Database
 *.sqlite3
-__pycache__/
-*.py[cod]
+*.db
+*.sql
+
+# Django
 /media/
 /staticfiles/
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# IDE & OS specific
 .DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
