@@ -4,3 +4,11 @@ __pycache__/
 env/
 .env
 media/
+
+.env
+*.sqlite3
+__pycache__/
+*.py[cod]
+/media/
+/staticfiles/
+.DS_Store

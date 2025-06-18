@@ -32,15 +32,21 @@ class CheckoutForm(forms.ModelForm):
         initial=True,
         label='Save billing address to my profile'
     )
+
+    # Explicit payment method field with correct choices
+    payment_method = forms.ChoiceField(
+        choices=Order.PAYMENT_CHOICES,
+        widget=forms.RadioSelect,
+        initial='credit_card'
+    )
     
     class Meta:
         model = Order
         fields = [
             'shipping_address',
             'billing_address',
-            'payment_method',
             'notes'
-        ]
+        ]  # Removed payment_method from here since we defined it explicitly
         widgets = {
             'shipping_address': forms.Textarea(attrs={'rows': 4}),
             'billing_address': forms.Textarea(attrs={'rows': 4}),
@@ -60,19 +66,20 @@ class CheckoutForm(forms.ModelForm):
         cleaned_data = super().clean()
         billing_option = cleaned_data.get('billing_option')
         
-        if billing_option == self.DIFFERENT_BILLING and not cleaned_data.get('billing_address'):
-            self.add_error('billing_address', 'Please enter billing address')
-
-        # Validación adicional
+        # Validate shipping address
         if not cleaned_data.get('shipping_address'):
-            raise forms.ValidationError("Por favor ingresa una dirección de envío")
+            self.add_error('shipping_address', 'Please enter a shipping address')
             
-        if cleaned_data.get('billing_option') == self.DIFFERENT_BILLING and not cleaned_data.get('billing_address'):
-            raise forms.ValidationError("Por favor ingresa una dirección de facturación")
+        # Validate billing address if different option is selected
+        if billing_option == self.DIFFERENT_BILLING and not cleaned_data.get('billing_address'):
+            self.add_error('billing_address', 'Please enter a billing address')
+
+        # Validate payment method
+        payment_method = cleaned_data.get('payment_method')
+        if payment_method not in dict(Order.PAYMENT_CHOICES).keys():
+            self.add_error('payment_method', 'Please select a valid payment method')
             
         return cleaned_data
-
-
     
     def save(self, commit=True):
         order = super().save(commit=False)
