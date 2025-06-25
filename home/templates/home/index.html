@@ -12,19 +12,25 @@
 
     <section class="featured-products">
         <h2>Featured Products</h2>
-        <div class="product-grid">
+        <div class="row">
             {% for product in featured_products %}
-            <div class="product-card">
-                <a href="{% url 'products:product_detail' product.id product.slug %}">
-                    {% if product.image %}
-                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-image">
-                    {% endif %}
-                    <h3>{{ product.name }}</h3>
-                </a>
-                <p>{{ product.jewelry_type|title }} - {{ product.material|title }}</p>
-                <p class="price">{{ product.display_price }}</p>
-                <a href="{% url 'products:product_detail' product.id product.slug %}" class="btn">View Details</a>
+            {% with random_class="random-size-"|add:forloop.counter0|stringformat:"d"|add:1 %}
+            <div class="col-12 col-md-6 col-lg-4 col-xl-3 mb-md">
+                <div class="product-card {{ random_class }} h-100">
+                    <a href="{% url 'products:product_detail' product.id product.slug %}">
+                        <div class="product-image-container">
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-image">
+                        {% endif %}
+                        </div>
+                        <h3>{{ product.name }}</h3>
+                    </a>
+                    <p>{{ product.jewelry_type|title }} - {{ product.material|title }}</p>
+                    <p class="price">{{ product.display_price }}</p>
+                    <a href="{% url 'products:product_detail' product.id product.slug %}" class="btn">View Details</a>
+                </div>
             </div>
+            {% endwith %}
             {% empty %}
             <p>No featured products available at the moment.</p>
             {% endfor %}

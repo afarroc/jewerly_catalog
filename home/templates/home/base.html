@@ -13,35 +13,6 @@
     <meta name="stripe-public-key" content="{{ STRIPE_PUBLIC_KEY }}">
 </head>
 <body>
-    <!-- Alert Messages Container -->
-    <div class="alerts-container">
-        {% if messages %}
-        <div class="container">
-            {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                <div class="alert-content">
-                    <span class="alert-icon">
-                        {% if message.tags == 'success' %}
-                        <i class="fas fa-check-circle"></i>
-                        {% elif message.tags == 'error' %}
-                        <i class="fas fa-exclamation-circle"></i>
-                        {% elif message.tags == 'warning' %}
-                        <i class="fas fa-exclamation-triangle"></i>
-                        {% else %}
-                        <i class="fas fa-info-circle"></i>
-                        {% endif %}
-                    </span>
-                    <span>{{ message }}</span>
-                </div>
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-    </div>
-
     <header class="header">
         <div class="container">
             <div class="row align-center">

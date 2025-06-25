@@ -406,15 +406,21 @@ button {
 }
 
 .product-image-container {
-  height: 200px;
+  width: 100%;
+  max-width: 400px;
+  aspect-ratio: 1 / 1;
+  margin: 0 auto;
   overflow: hidden;
-  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .product-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  background: #fff;
   transition: transform var(--transition-slow);
 }
 
@@ -469,6 +475,37 @@ button {
   margin-top: auto;
   display: flex;
   gap: var(--spacing-sm);
+}
+
+.product-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  /* Tamaño cuadrado aleatorio entre 220px y 340px */
+  width: 100%;
+  max-width: 340px;
+  min-width: 220px;
+  aspect-ratio: 1 / 1;
+  margin: 0 auto 1.5rem auto;
+  transition: box-shadow 0.3s, transform 0.3s;
+}
+
+.product-card.random-size-1 { width: 220px; height: 220px; }
+.product-card.random-size-2 { width: 260px; height: 260px; }
+.product-card.random-size-3 { width: 300px; height: 300px; }
+.product-card.random-size-4 { width: 340px; height: 340px; }
+
+@media (max-width: 768px) {
+  .product-card,
+  .product-card.random-size-1,
+  .product-card.random-size-2,
+  .product-card.random-size-3,
+  .product-card.random-size-4 {
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 1 / 1;
+    max-width: 100%;
+  }
 }
 
 /* Badges */
@@ -574,6 +611,14 @@ button {
   align-items: center;
   justify-content: center;
   margin-bottom: var(--spacing-md);
+  width: 100%;
+  max-width: 400px;
+  aspect-ratio: 1 / 1;
+  margin: 0 auto;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .thumbnails {
@@ -601,6 +646,9 @@ button {
   border-radius: var(--border-radius);
   padding: var(--spacing-lg);
   box-shadow: var(--box-shadow);
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .price-section {
@@ -2279,4 +2327,28 @@ button {
         transform: translateY(0);
         opacity: 1;
     }
+}
+
+.featured-products .row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 2rem;
+}
+
+.product-card,
+.product-card.random-size-1,
+.product-card.random-size-2,
+.product-card.random-size-3,
+.product-card.random-size-4 {
+  width: 100% !important;
+  max-width: 100%;
+  aspect-ratio: 1 / 1;
+  height: auto;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .featured-products .row {
+    gap: 1rem;
+  }
 }

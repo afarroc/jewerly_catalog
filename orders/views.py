@@ -6,13 +6,14 @@ from django.core.mail import send_mail
 from django.utils import timezone
 from django.db import transaction
 from django.core.paginator import Paginator
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from decimal import Decimal
 from cart.models import Cart, CartItem
 from .models import Order, OrderItem
 from .forms import CheckoutForm
+from django.views.decorators.http import require_POST
 import logging
 import stripe
 
@@ -273,6 +274,8 @@ def order_detail(request, order_id):
     context = {
         'title': f'Order Details #{order.order_number}',
         'order': order,
+        'active_statuses': ['processing', 'shipped', 'delivered'],
+        'shipped_statuses': ['shipped', 'delivered'],
     }
     return render(request, 'orders/detail.html', context)
 
@@ -287,15 +290,16 @@ def order_invoice(request, order_id):
     return render(request, 'orders/invoice.html', context)
 
 @login_required
+@require_POST
 def cancel_order(request, order_id):
     """Handle order cancellation request."""
     order = get_object_or_404(Order, id=order_id, user=request.user)
-    
+
     if order.status not in ['pending', 'processing']:
         messages.error(request, "This order cannot be cancelled at this stage")
         logger.warning(f"Cancel attempt for non-cancellable order {order.order_number}")
         return redirect('orders:order_detail', order_id=order.id)
-    
+
     try:
         with transaction.atomic():
             # Create Stripe refund if payment was processed
@@ -309,19 +313,47 @@ def cancel_order(request, order_id):
                             payment_intent=intent.id,
                             reason='requested_by_customer'
                         )
-                except stripe.error.StripeError as e:
-                    logger.error(f"Stripe refund failed: {str(e)}")
+                except Exception as e:
+                    logger.error(f"Stripe refund failed: {str(e)} (IGNORED in DEBUG mode)")
+                    if not settings.DEBUG:
+                        raise
 
             order.status = 'cancelled'
             order.save()
-            send_order_cancellation(order)
+            try:
+                send_order_cancellation(order)
+            except Exception as e:
+                logger.error(f"Order cancellation email failed: {str(e)} (IGNORED in DEBUG mode)")
+                if not settings.DEBUG:
+                    raise
             messages.success(request, "Order has been cancelled successfully")
             logger.info(f"Order {order.order_number} cancelled by user")
     except Exception as e:
-        messages.error(request, "Failed to cancel order")
-        logger.error(f"Order cancellation failed: {str(e)}")
-    
-    return redirect('orders:order_detail', order_id=order.id)
+        if settings.DEBUG:
+            messages.success(request, "Order has been cancelled successfully (with ignored errors)")
+            logger.warning(f"Order cancelled with ignored error in DEBUG: {str(e)}")
+        else:
+            messages.error(request, "Failed to cancel order")
+            logger.error(f"Order cancellation failed: {str(e)}")
+
+    return redirect('orders:order_history')
+
+@login_required
+@require_POST
+def delete_order(request, order_id):
+    """Delete an order permanently (only if pending or processing and belongs to user)."""
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    if order.status not in ['pending', 'processing']:
+        messages.error(request, "This order cannot be deleted at this stage.")
+        return redirect('orders:order_detail', order_id=order.id)
+    try:
+        order.delete()
+        messages.success(request, "Order deleted successfully.")
+        logger.info(f"Order {order.order_number} deleted by user {request.user.id}")
+    except Exception as e:
+        messages.error(request, "Failed to delete order.")
+        logger.error(f"Order deletion failed: {str(e)}")
+    return redirect('orders:order_history')
 
 @csrf_exempt
 def stripe_webhook(request):
