@@ -9,14 +9,14 @@ def index(request):
     """Render the home page with featured products."""
     try:
         featured_products = Product.objects.filter(available=True).order_by('-created_at')[:8]
-        logger.debug(f"Displaying {len(featured_products)} featured products on home page")
+        logger.debug(f"Mostrando {len(featured_products)} productos destacados en la página de inicio")
     except Exception as e:
         featured_products = []
-        logger.error(f"Error fetching featured products: {str(e)}")
+        logger.error(f"Error al obtener productos destacados: {str(e)}")
 
     context = {
-        'title': 'Fantasy Jewelry Catalog',
-        'welcome_message': 'Welcome to our Fantasy Jewelry Collection!',
+        'title': 'Catálogo de Joyería Fantasía',
+        'welcome_message': '¡Bienvenido a nuestra Colección de Joyería Fantasía!',
         'featured_products': featured_products,
     }
     return render(request, 'home/index.html', context)

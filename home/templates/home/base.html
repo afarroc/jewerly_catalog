@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 {% load static %}
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>{% block title %}Fantasy Jewelry Catalog{% endblock %}</title>
+    <title>{% block title %}Catálogo de Joyería Fantasía{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -18,32 +18,32 @@
             <div class="row align-center">
                 <div class="col-6 col-md-4">
                     <a href="{% url 'home:index' %}" class="logo-link">
-                        <h1 class="logo">Fantasy Jewelry</h1>
+                        <h1 class="logo">Joyería Fantasía</h1>
                     </a>
                 </div>
                 <div class="col-6 col-md-8 text-right">
                     <nav class="main-nav">
-                        <a href="{% url 'home:index' %}" class="nav-link"><i class="fas fa-home"></i> <span class="nav-text">Home</span></a>
-                        <a href="{% url 'products:product_list' %}" class="nav-link"><i class="fas fa-gem"></i> <span class="nav-text">Products</span></a>
+                        <a href="{% url 'home:index' %}" class="nav-link"><i class="fas fa-home"></i> <span class="nav-text">Inicio</span></a>
+                        <a href="{% url 'products:product_list' %}" class="nav-link"><i class="fas fa-gem"></i> <span class="nav-text">Productos</span></a>
                         <a href="{% url 'cart:cart_detail' %}" class="nav-link cart-link">
                             <i class="fas fa-shopping-cart"></i>
                             <span class="cart-count">
                                 {% if cart.total_items > 0 %}{{ cart.total_items }}{% endif %}
                             </span>
-                            <span class="nav-text">Cart</span>
+                            <span class="nav-text">Carrito</span>
                         </a>
                         {% if user.is_authenticated %}
                         <div class="nav-dropdown">
                             <a href="#" class="nav-link"><i class="fas fa-user"></i> <span class="nav-text">{{ user.username }}</span></a>
                             <div class="dropdown-menu">
-                                <a href="{% url 'accounts:profile' %}" class="dropdown-item"><i class="fas fa-user-circle"></i> Profile</a>
-                                <a href="{% url 'orders:order_history' %}" class="dropdown-item"><i class="fas fa-history"></i> Orders</a>
-                                <a href="{% url 'accounts:logout' %}" class="dropdown-item"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                                <a href="{% url 'accounts:profile' %}" class="dropdown-item"><i class="fas fa-user-circle"></i> Perfil</a>
+                                <a href="{% url 'orders:order_history' %}" class="dropdown-item"><i class="fas fa-history"></i> Pedidos</a>
+                                <a href="{% url 'accounts:logout' %}" class="dropdown-item"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
                             </div>
                         </div>
                         {% else %}
-                        <a href="{% url 'accounts:login' %}" class="nav-link"><i class="fas fa-sign-in-alt"></i> <span class="nav-text">Login</span></a>
-                        <a href="{% url 'accounts:register' %}" class="nav-link"><i class="fas fa-user-plus"></i> <span class="nav-text">Register</span></a>
+                        <a href="{% url 'accounts:login' %}" class="nav-link"><i class="fas fa-sign-in-alt"></i> <span class="nav-text">Iniciar Sesión</span></a>
+                        <a href="{% url 'accounts:register' %}" class="nav-link"><i class="fas fa-user-plus"></i> <span class="nav-text">Registrarse</span></a>
                         {% endif %}
                     </nav>
                     <button class="mobile-menu-btn" aria-label="Toggle menu"><i class="fas fa-bars"></i></button>
@@ -63,23 +63,23 @@
         <div class="container">
             <div class="footer-grid">
                 <div class="footer-section">
-                    <h3 class="footer-title">Quick Links</h3>
+                    <h3 class="footer-title">Enlaces Rápidos</h3>
                     <ul class="footer-links">
-                        <li><a href="{% url 'home:index' %}">Home</a></li>
-                        <li><a href="{% url 'products:product_list' %}">Products</a></li>
-                        <li><a href="{% url 'orders:order_history' %}">My Orders</a></li>
+                        <li><a href="{% url 'home:index' %}">Inicio</a></li>
+                        <li><a href="{% url 'products:product_list' %}">Productos</a></li>
+                        <li><a href="{% url 'orders:order_history' %}">Mis Pedidos</a></li>
                     </ul>
                 </div>
                 <div class="footer-section">
                     <h3 class="footer-title">Legal</h3>
                     <ul class="footer-links">
-                        <li><a href="{% url 'orders:terms' %}">Terms & Conditions</a></li>
-                        <li><a href="#">Privacy Policy</a></li>
-                        <li><a href="#">Shipping Policy</a></li>
+                        <li><a href="{% url 'orders:terms' %}">Términos y Condiciones</a></li>
+                        <li><a href="#">Política de Privacidad</a></li>
+                        <li><a href="#">Política de Envíos</a></li>
                     </ul>
                 </div>
                 <div class="footer-section">
-                    <h3 class="footer-title">Connect</h3>
+                    <h3 class="footer-title">Conectar</h3>
                     <div class="social-links">
                         <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
                         <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
@@ -89,7 +89,7 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; {% now "Y" %} Fantasy Jewelry Catalog. All rights reserved.</p>
+                <p>&copy; {% now "Y" %} Catálogo de Joyería Fantasía. Todos los derechos reservados.</p>
             </div>
         </div>
     </footer>

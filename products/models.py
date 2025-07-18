@@ -101,4 +101,4 @@ class Product(models.Model):
     @property
     def display_price(self):
         """Format price for display with currency symbol."""
-        return f"${self.price:.2f}"
+        return f"S/. {self.price:.2f}"
