@@ -1,35 +1,84 @@
 // Mobile menu toggle and general DOM setup
 document.addEventListener('DOMContentLoaded', function() {
-    // Mobile menu toggle
+    // Mobile menu elements
     const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
     const mainNav = document.querySelector('.main-nav');
     
+    // Handle mobile menu functionality
     if (mobileMenuBtn && mainNav) {
-        mobileMenuBtn.addEventListener('click', function() {
-            mainNav.style.display = mainNav.style.display === 'flex' ? 'none' : 'flex';
+        // Track menu state
+        let isMenuOpen = false;
+        
+        // Check if current view is mobile
+        const isMobileView = () => window.innerWidth <= 992;
+        
+        // Set initial menu state
+        mainNav.style.display = isMobileView() ? 'none' : 'flex';
+        
+        // Toggle menu visibility
+        const toggleMenu = (shouldOpen) => {
+            const open = typeof shouldOpen === 'boolean' ? shouldOpen : !isMenuOpen;
+            
+            if (isMobileView()) {
+                mainNav.style.display = open ? 'flex' : 'none';
+                mobileMenuBtn.classList.toggle('active', open);
+                mainNav.classList.toggle('active', open);
+                document.body.style.overflow = open ? 'hidden' : '';
+                isMenuOpen = open;
+            } else {
+                mainNav.style.display = 'flex';
+                isMenuOpen = false;
+            }
+        };
+
+        // Mobile menu button click handler
+        mobileMenuBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            toggleMenu();
         });
         
         // Close menu when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!mainNav.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
-                mainNav.style.display = 'none';
+        const handleDocumentClick = (e) => {
+            if (isMenuOpen && isMobileView() && 
+                !mainNav.contains(e.target) && 
+                !mobileMenuBtn.contains(e.target)) {
+                toggleMenu(false);
             }
+        };
+        
+        document.addEventListener('click', handleDocumentClick);
+        
+        // Close menu when clicking on nav links
+        mainNav.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (isMobileView()) {
+                    toggleMenu(false);
+                }
+            });
         });
+        
+        // Handle window resize
+        const handleResize = () => {
+            if (isMobileView()) {
+                if (isMenuOpen) {
+                    mainNav.style.display = 'flex';
+                }
+            } else {
+                mainNav.style.display = 'flex';
+                isMenuOpen = false;
+                document.body.style.overflow = '';
+            }
+        };
+        
+        window.addEventListener('resize', handleResize);
     }
     
-    // Responsive menu handling
-    window.addEventListener('resize', function() {
-        if (window.innerWidth > 992) {
-            if (mainNav) mainNav.style.display = 'flex';
-        } else {
-            if (mainNav) mainNav.style.display = 'none';
-        }
-    });
-
     // Quantity selector functionality
     document.querySelectorAll('.qty-btn').forEach(button => {
         button.addEventListener('click', function() {
             const input = this.parentNode.querySelector('input[type=number]');
+            if (!input) return;
+            
             if (this.classList.contains('minus')) {
                 input.stepDown();
             } else if (this.classList.contains('plus')) {
@@ -52,7 +101,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeStripePayment();
 });
 
-// Password strength meter initialization
+// Password strength meter functions
 function initializePasswordStrengthMeter(passwordField) {
     const passwordStrength = document.querySelector('.password-strength') || createPasswordStrengthMeter(passwordField);
     const passwordCriteria = document.querySelector('.password-criteria') || createPasswordCriteria(passwordField);
@@ -138,7 +187,7 @@ function updatePasswordStrength(password, strengthMeter, criteriaList) {
     }
 }
 
-// Checkout form initialization
+// Checkout form handling
 function initializeCheckoutForm() {
     const form = document.querySelector('.checkout-form');
     if (!form) return;
@@ -236,5 +285,13 @@ function initializeStripePayment() {
 
 // Helper functions
 function getCSRFToken() {
-    return document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+    return csrfToken ? csrfToken.value : '';
+}
+
+function showAlert(message, type = 'info') {
+    // Implement your alert/show notification function here
+    console.log(`${type.toUpperCase()}: ${message}`);
+    // Example: You could use Toastify, SweetAlert, or a custom alert component
+    // alert(`${type.toUpperCase()}: ${message}`);
 }
