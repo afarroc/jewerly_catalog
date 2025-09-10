@@ -6,11 +6,11 @@ Copia y pega estas variables en el dashboard de Render > Tu Servicio Web > Envir
 
 ### Variables Obligatorias
 ```
-SECRET_KEY=django-insecure-production-key-change-this-in-render-dashboard
+SECRET_KEY=tu_clave_secreta_segura_para_produccion
 DEBUG=False
 ALLOWED_HOSTS=tu-app.onrender.com
 CSRF_TRUSTED_ORIGINS=https://tu-app.onrender.com
-DATABASE_URL=postgresql://admin:wSPH2XQ1sB6DGlTwVEn84XQVYtFxTRPO@dpg-d30vl97fte5s73ftlnlg-a/projects_8gq2
+DATABASE_URL=tu_url_de_base_de_datos_postgresql
 ```
 
 ### Variables para Email (Opcionales)
@@ -26,9 +26,9 @@ DEFAULT_FROM_EMAIL=Fantasy Jewelry <noreply@fantasyjewelry.com>
 
 ### Variables para Stripe (Opcionales)
 ```
-STRIPE_PUBLIC_KEY=pk_live_tu_clave_publica
-STRIPE_SECRET_KEY=sk_live_tu_clave_secreta
-STRIPE_WEBHOOK_SECRET=whsec_tu_webhook_secret
+STRIPE_PUBLIC_KEY=pk_live_tu_clave_publica_de_stripe
+STRIPE_SECRET_KEY=sk_live_tu_clave_secreta_de_stripe
+STRIPE_WEBHOOK_SECRET=whsec_tu_webhook_secret_de_stripe
 ```
 
 ### Variables de Configuración (Opcionales)
@@ -41,24 +41,33 @@ LOGGING_LEVEL=INFO
 
 ## 🔐 Pasos de Seguridad
 
-1. **Cambia la SECRET_KEY** por una clave segura generada específicamente para producción
-2. **Configura las claves de Stripe** con las credenciales de producción (live)
-3. **Configura el email** con credenciales válidas para envío de correos
-4. **Verifica ALLOWED_HOSTS** con tu dominio real en Render
+1. **Genera una SECRET_KEY segura:**
+   ```python
+   python -c "import secrets; print(secrets.token_urlsafe(50))"
+   ```
+
+2. **Configura las variables en Render:**
+   - Ve a tu Web Service
+   - Selecciona "Environment"
+   - Agrega cada variable con su valor correspondiente
+
+3. **Verifica la configuración:**
+   - Asegúrate de que `DEBUG=False`
+   - Configura `ALLOWED_HOSTS` con tu dominio real
+   - Usa credenciales de producción para Stripe
 
 ## ⚠️ Recordatorios de Seguridad
 
-- Nunca subas `.env.production` al repositorio
-- Las variables sensibles están protegidas por `.gitignore`
-- Usa siempre claves de producción (live) para Stripe
-- Cambia la SECRET_KEY por una única para producción
+- Nunca uses las mismas credenciales en desarrollo y producción
+- Mantén las claves de Stripe de producción seguras
+- Cambia la SECRET_KEY si es comprometida
+- No compartas estas variables en repositorios públicos
 
 ## 🚀 Verificación
 
 Después de configurar las variables:
-1. Despliega la aplicación
-2. Verifica que la base de datos PostgreSQL se conecte correctamente
-3. Prueba el envío de emails
-4. Verifica que los pagos con Stripe funcionen
+1. El despliegue debería funcionar sin errores 400
+2. La aplicación será accesible en tu dominio de Render
+3. Los pagos con Stripe funcionarán correctamente
 
-¡Tu aplicación estará lista para producción!
+¡Tu aplicación estará lista para producción de manera segura!
