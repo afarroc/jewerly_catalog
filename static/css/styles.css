@@ -265,6 +265,165 @@ button {
 }
 
 /* ================ */
+/* Banner Styles */
+/* ================ */
+.banners-section {
+    margin-bottom: var(--spacing-xl);
+}
+
+.banner-container {
+    position: relative;
+    height: 60vh;
+    min-height: 400px;
+    max-height: 600px;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    box-shadow: var(--box-shadow-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.banner-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        135deg,
+        rgba(106, 76, 147, 0.8) 0%,
+        rgba(138, 90, 68, 0.6) 100%
+    );
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: var(--spacing-xl);
+}
+
+.banner-content {
+    max-width: 800px;
+    color: white;
+    z-index: 2;
+}
+
+.banner-title {
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin-bottom: var(--spacing-md);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    line-height: 1.2;
+}
+
+.banner-subtitle {
+    font-size: 1.8rem;
+    font-weight: 300;
+    margin-bottom: var(--spacing-lg);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    opacity: 0.9;
+}
+
+.banner-description {
+    font-size: 1.2rem;
+    margin-bottom: var(--spacing-xl);
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6;
+}
+
+.banner-btn {
+    background-color: var(--accent-color);
+    color: var(--dark-color);
+    font-weight: 600;
+    padding: var(--spacing-md) var(--spacing-xl);
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all var(--transition-fast);
+    box-shadow: 0 4px 15px rgba(248, 193, 55, 0.3);
+}
+
+.banner-btn:hover {
+    background-color: #e6b800;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(248, 193, 55, 0.4);
+    color: var(--dark-color);
+}
+
+/* Responsive Banner Styles */
+@media (max-width: 992px) {
+    .banner-container {
+        height: 50vh;
+        min-height: 350px;
+    }
+
+    .banner-title {
+        font-size: 2.8rem;
+    }
+
+    .banner-subtitle {
+        font-size: 1.5rem;
+    }
+
+    .banner-description {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .banner-container {
+        height: 40vh;
+        min-height: 300px;
+    }
+
+    .banner-overlay {
+        padding: var(--spacing-lg);
+    }
+
+    .banner-title {
+        font-size: 2.2rem;
+    }
+
+    .banner-subtitle {
+        font-size: 1.3rem;
+    }
+
+    .banner-description {
+        font-size: 1rem;
+        margin-bottom: var(--spacing-lg);
+    }
+
+    .banner-btn {
+        padding: var(--spacing-sm) var(--spacing-lg);
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .banner-container {
+        height: 35vh;
+        min-height: 250px;
+    }
+
+    .banner-title {
+        font-size: 1.8rem;
+    }
+
+    .banner-subtitle {
+        font-size: 1.1rem;
+    }
+
+    .banner-description {
+        font-size: 0.9rem;
+        margin-bottom: var(--spacing-md);
+    }
+}
+
+/* ================ */
 /* Components */
 /* ================ */
 
