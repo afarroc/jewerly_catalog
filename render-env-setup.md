@@ -1,6 +1,6 @@
 # Configuración de Variables de Entorno en Render
 
-## 📋 Lista de Variables Requeridas
+## Lista de Variables Requeridas
 
 Copia y pega estas variables en el dashboard de Render > Tu Servicio Web > Environment:
 
@@ -39,7 +39,7 @@ DEFAULT_SHIPPING_COST=5.00
 LOGGING_LEVEL=INFO
 ```
 
-## 🔐 Pasos de Seguridad
+## Pasos de Seguridad
 
 1. **Genera una SECRET_KEY segura:**
    ```python
@@ -56,14 +56,14 @@ LOGGING_LEVEL=INFO
    - Configura `ALLOWED_HOSTS` con tu dominio real
    - Usa credenciales de producción para Stripe
 
-## ⚠️ Recordatorios de Seguridad
+## Recordatorios de Seguridad
 
 - Nunca uses las mismas credenciales en desarrollo y producción
 - Mantén las claves de Stripe de producción seguras
 - Cambia la SECRET_KEY si es comprometida
 - No compartas estas variables en repositorios públicos
 
-## 🚀 Verificación
+## Verificación
 
 Después de configurar las variables:
 1. El despliegue debería funcionar sin errores 400
