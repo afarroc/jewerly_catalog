@@ -12,9 +12,9 @@ pip install -r requirements.txt
 
 # Verificar instalación de dependencias críticas
 echo "Verificando dependencias críticas..."
-python -c "import django; print('Django OK')"
-python -c "import gunicorn; print('Gunicorn OK')"
-python -c "import whitenoise; print('WhiteNoise OK')"
+python3 -c "import django; print('Django OK')"
+python3 -c "import gunicorn; print('Gunicorn OK')"
+python3 -c "import whitenoise; print('WhiteNoise OK')"
 
 # Crear directorios necesarios
 echo "Creando directorios necesarios..."
@@ -27,14 +27,14 @@ export PYTHONPATH=$PYTHONPATH:$(pwd)
 
 # Verificar configuración de Django
 echo "Verificando configuración de Django..."
-python manage.py check --deploy
+python3 manage.py check --deploy
 
 # Ejecutar migraciones
 echo "Ejecutando migraciones de base de datos..."
-python manage.py migrate --noinput
+python3 manage.py migrate --noinput
 
 # Recolectar archivos estáticos
 echo "Recolectando archivos estáticos..."
-python manage.py collectstatic --noinput --clear
+python3 manage.py collectstatic --noinput --clear
 
 echo "Construcción completada exitosamente!"
