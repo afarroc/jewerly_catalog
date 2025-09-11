@@ -6,6 +6,10 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
+# Configurar PyMySQL para MySQL
+import pymysql
+pymysql.install_as_MySQLdb()
+
 # Load environment variables
 load_dotenv()
 
@@ -84,7 +88,7 @@ WSGI_APPLICATION = 'jewerly_catalog.wsgi.application'
 # =======================
 # Database
 # =======================
-# Configuración para SQLite (desarrollo local por defecto)
+# Configuración para MySQL (desarrollo local)
 # Para producción, configurar DATABASE_URL con PostgreSQL
 if os.getenv('DATABASE_URL'):
     import dj_database_url
@@ -92,11 +96,18 @@ if os.getenv('DATABASE_URL'):
         'default': dj_database_url.config(default=os.getenv('DATABASE_URL'))
     }
 else:
-    # Base de datos SQLite por defecto para desarrollo local
+    # Base de datos MySQL para desarrollo local
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.getenv('DB_NAME', 'projects'),
+            'USER': os.getenv('DB_USER', 'admin'),
+            'PASSWORD': os.getenv('DB_PASSWORD', 'Peru+123'),
+            'HOST': os.getenv('DB_HOST', '127.0.0.1'),
+            'PORT': os.getenv('DB_PORT', '3306'),
+            'OPTIONS': {
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            }
         }
     }
 
