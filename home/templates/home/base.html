@@ -23,9 +23,15 @@
                 </div>
                 <div class="col-6 col-md-8 text-right">
                     <nav class="main-nav">
-                        <a href="{% url 'home:index' %}" class="nav-link"><i class="fas fa-home"></i> <span class="nav-text">Inicio</span></a>
-                        <a href="{% url 'products:product_list' %}" class="nav-link"><i class="fas fa-gem"></i> <span class="nav-text">Productos</span></a>
-                        <a href="{% url 'cart:cart_detail' %}" class="nav-link cart-link">
+                        <a href="{% url 'home:index' %}" class="nav-link" title="Inicio" data-tooltip="Inicio">
+                            <i class="fas fa-home"></i>
+                            <span class="nav-text">Inicio</span>
+                        </a>
+                        <a href="{% url 'products:product_list' %}" class="nav-link" title="Productos" data-tooltip="Productos">
+                            <i class="fas fa-gem"></i>
+                            <span class="nav-text">Productos</span>
+                        </a>
+                        <a href="{% url 'cart:cart_detail' %}" class="nav-link cart-link" title="Carrito de compras" data-tooltip="Carrito">
                             <i class="fas fa-shopping-cart"></i>
                             <span class="cart-count">
                                 {% if cart.total_items > 0 %}{{ cart.total_items }}{% endif %}
@@ -34,19 +40,41 @@
                         </a>
                         {% if user.is_authenticated %}
                         <div class="nav-dropdown">
-                            <a href="#" class="nav-link"><i class="fas fa-user"></i> <span class="nav-text">{{ user.username }}</span></a>
+                            <a href="#" class="nav-link user-menu-btn" title="Menú de usuario" data-tooltip="Mi cuenta">
+                                <i class="fas fa-user"></i>
+                                <span class="nav-text">{{ user.username|truncatechars:10 }}</span>
+                                <i class="fas fa-chevron-down dropdown-arrow"></i>
+                            </a>
                             <div class="dropdown-menu">
-                                <a href="{% url 'accounts:profile' %}" class="dropdown-item"><i class="fas fa-user-circle"></i> Perfil</a>
-                                <a href="{% url 'orders:order_history' %}" class="dropdown-item"><i class="fas fa-history"></i> Pedidos</a>
-                                <a href="{% url 'accounts:logout' %}" class="dropdown-item"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
+                                <a href="{% url 'accounts:profile' %}" class="dropdown-item" title="Ver mi perfil">
+                                    <i class="fas fa-user-circle"></i>
+                                    <span>Perfil</span>
+                                </a>
+                                <a href="{% url 'orders:order_history' %}" class="dropdown-item" title="Ver mis pedidos">
+                                    <i class="fas fa-history"></i>
+                                    <span>Pedidos</span>
+                                </a>
+                                <a href="{% url 'accounts:logout' %}" class="dropdown-item" title="Cerrar sesión">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    <span>Cerrar Sesión</span>
+                                </a>
                             </div>
                         </div>
                         {% else %}
-                        <a href="{% url 'accounts:login' %}" class="nav-link"><i class="fas fa-sign-in-alt"></i> <span class="nav-text">Iniciar Sesión</span></a>
-                        <a href="{% url 'accounts:register' %}" class="nav-link"><i class="fas fa-user-plus"></i> <span class="nav-text">Registrarse</span></a>
+                        <a href="{% url 'accounts:login' %}" class="nav-link" title="Iniciar sesión" data-tooltip="Iniciar Sesión">
+                            <i class="fas fa-sign-in-alt"></i>
+                            <span class="nav-text">Iniciar Sesión</span>
+                        </a>
+                        <a href="{% url 'accounts:register' %}" class="nav-link" title="Crear cuenta" data-tooltip="Registrarse">
+                            <i class="fas fa-user-plus"></i>
+                            <span class="nav-text">Registrarse</span>
+                        </a>
                         {% endif %}
                     </nav>
-                    <button class="mobile-menu-btn" aria-label="Toggle menu"><i class="fas fa-bars"></i></button>
+                    <button class="mobile-menu-btn" aria-label="Menú de navegación" title="Abrir menú">
+                        <i class="fas fa-bars"></i>
+                        <span class="sr-only">Menú</span>
+                    </button>
                 </div>
             </div>
         </div>

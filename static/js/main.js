@@ -3,22 +3,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // Mobile menu elements
     const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
     const mainNav = document.querySelector('.main-nav');
-    
+
     // Handle mobile menu functionality
     if (mobileMenuBtn && mainNav) {
         // Track menu state
         let isMenuOpen = false;
-        
+
         // Check if current view is mobile
         const isMobileView = () => window.innerWidth <= 992;
-        
+
         // Set initial menu state
         mainNav.style.display = isMobileView() ? 'none' : 'flex';
-        
+
         // Toggle menu visibility
         const toggleMenu = (shouldOpen) => {
             const open = typeof shouldOpen === 'boolean' ? shouldOpen : !isMenuOpen;
-            
+
             if (isMobileView()) {
                 mainNav.style.display = open ? 'flex' : 'none';
                 mobileMenuBtn.classList.toggle('active', open);
@@ -36,18 +36,18 @@ document.addEventListener('DOMContentLoaded', function() {
             e.stopPropagation();
             toggleMenu();
         });
-        
+
         // Close menu when clicking outside
         const handleDocumentClick = (e) => {
-            if (isMenuOpen && isMobileView() && 
-                !mainNav.contains(e.target) && 
+            if (isMenuOpen && isMobileView() &&
+                !mainNav.contains(e.target) &&
                 !mobileMenuBtn.contains(e.target)) {
                 toggleMenu(false);
             }
         };
-        
+
         document.addEventListener('click', handleDocumentClick);
-        
+
         // Close menu when clicking on nav links
         mainNav.querySelectorAll('a').forEach(link => {
             link.addEventListener('click', () => {
@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         });
-        
+
         // Handle window resize
         const handleResize = () => {
             if (isMobileView()) {
@@ -69,8 +69,61 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.body.style.overflow = '';
             }
         };
-        
+
         window.addEventListener('resize', handleResize);
+    }
+
+    // Mobile dropdown functionality
+    const userMenuBtn = document.querySelector('.user-menu-btn');
+    const navDropdown = document.querySelector('.nav-dropdown');
+
+    if (userMenuBtn && navDropdown) {
+        // Check if current view is mobile
+        const isMobileView = () => window.innerWidth <= 992;
+
+        // Toggle dropdown for mobile
+        const toggleDropdown = (shouldOpen) => {
+            const open = typeof shouldOpen === 'boolean' ? shouldOpen : !navDropdown.classList.contains('active');
+
+            if (isMobileView()) {
+                navDropdown.classList.toggle('active', open);
+            }
+        };
+
+        // Handle user menu button click
+        userMenuBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (isMobileView()) {
+                toggleDropdown();
+            }
+        });
+
+        // Close dropdown when clicking on dropdown items
+        navDropdown.querySelectorAll('.dropdown-item').forEach(item => {
+            item.addEventListener('click', () => {
+                if (isMobileView()) {
+                    toggleDropdown(false);
+                }
+            });
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (isMobileView() &&
+                navDropdown.classList.contains('active') &&
+                !navDropdown.contains(e.target)) {
+                toggleDropdown(false);
+            }
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (!isMobileView()) {
+                navDropdown.classList.remove('active');
+            }
+        });
     }
     
     // Quantity selector functionality
