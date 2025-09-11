@@ -19,6 +19,7 @@ class BannerAdmin(admin.ModelAdmin):
         'is_active',
         'order',
         'has_button',
+        'button_info',
         'created_at',
         'preview_image'
     )
@@ -104,14 +105,20 @@ class BannerAdmin(admin.ModelAdmin):
 
     def has_button(self, obj):
         """Mostrar si el banner tiene botón configurado"""
-        if obj.has_button:
-            return format_html(
-                '<span style="color: #28a745; font-weight: bold;">✓</span> {}',
-                obj.button_text
-            )
-        return format_html('<span style="color: #6c757d;">—</span>')
+        return obj.has_button
     has_button.short_description = "Botón"
     has_button.boolean = True
+
+    def button_info(self, obj):
+        """Mostrar información detallada del botón"""
+        if obj.has_button:
+            return format_html(
+                '<span style="color: #28a745; font-weight: bold;">✓</span> {} → {}',
+                obj.button_text,
+                obj.button_url
+            )
+        return format_html('<span style="color: #6c757d;">Sin botón</span>')
+    button_info.short_description = "Información del Botón"
 
     def activate_banners(self, request, queryset):
         """Activar banners seleccionados"""
