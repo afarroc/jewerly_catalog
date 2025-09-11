@@ -84,14 +84,15 @@ WSGI_APPLICATION = 'jewerly_catalog.wsgi.application'
 # =======================
 # Database
 # =======================
-# Configuración para PostgreSQL (producción y desarrollo)
+# Configuración para SQLite (desarrollo local por defecto)
+# Para producción, configurar DATABASE_URL con PostgreSQL
 if os.getenv('DATABASE_URL'):
     import dj_database_url
     DATABASES = {
         'default': dj_database_url.config(default=os.getenv('DATABASE_URL'))
     }
 else:
-    # Configuración de respaldo para desarrollo local con SQLite
+    # Base de datos SQLite por defecto para desarrollo local
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
