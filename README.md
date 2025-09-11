@@ -127,6 +127,65 @@ if not DEBUG:
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 ```
 
+### Framework Bootstrap Integrado
+
+#### Instalacion de Bootstrap
+
+Para instalar Bootstrap en el entorno virtual:
+
+```bash
+# Activar entorno virtual
+source .venv/bin/activate  # Linux/Mac
+# o
+.venv\Scripts\activate     # Windows
+
+# Instalar Bootstrap
+pip install django-bootstrap5==24.3
+
+# Verificar instalacion
+python -c "import bootstrap5; print('Bootstrap OK')"
+```
+
+#### Caracteristicas de Bootstrap
+
+- Sistema de grid responsive de 12 columnas
+- Componentes preconstruidos: cards, badges, buttons, modals
+- Utilidades responsive: d-flex, text-center, mb-*, gap-*
+- Breakpoints: xs, sm, md, lg, xl
+- JavaScript incluido: dropdowns, modals, tooltips
+- CSS compatible con estilos personalizados
+
+#### Uso en Templates
+
+```html
+<!-- Ejemplo de grid Bootstrap -->
+<div class="row">
+  <div class="col-lg-3 col-md-4 col-sm-12">
+    <!-- Sidebar -->
+  </div>
+  <div class="col-lg-9 col-md-8 col-sm-12">
+    <!-- Contenido principal -->
+  </div>
+</div>
+
+<!-- Ejemplo de componentes -->
+<div class="card">
+  <div class="card-body">
+    <h5 class="card-title">Producto</h5>
+    <span class="badge bg-success">En Stock</span>
+  </div>
+</div>
+```
+
+#### Breakpoints Responsive
+
+| Dispositivo | Breakpoint | Columnas tipicas |
+|-------------|------------|------------------|
+| Movil | < 576px | 1 columna (col-12) |
+| Tablet | 576px - 992px | 2 columnas (col-md-6) |
+| Desktop | 992px - 1200px | 3-4 columnas (col-lg-4) |
+| Desktop Grande | > 1200px | 4-5 columnas (col-xl-3) |
+
 ## Despliegue en Render
 
 ### 1. Preparación del Repositorio

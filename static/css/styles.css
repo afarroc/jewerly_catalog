@@ -312,71 +312,181 @@ button {
   .col-xs-12 { width: 100% !important; }
 }
 
-/* Flexbox Grid Utilities */
-.d-flex { display: flex; }
-.d-inline-flex { display: inline-flex; }
-.flex-row { flex-direction: row; }
-.flex-column { flex-direction: column; }
-.flex-wrap { flex-wrap: wrap; }
-.flex-nowrap { flex-wrap: nowrap; }
-.justify-content-start { justify-content: flex-start; }
-.justify-content-end { justify-content: flex-end; }
-.justify-content-center { justify-content: center; }
-.justify-content-between { justify-content: space-between; }
-.justify-content-around { justify-content: space-around; }
-.align-items-start { align-items: flex-start; }
-.align-items-end { align-items: flex-end; }
-.align-items-center { align-items: center; }
-.align-items-stretch { align-items: stretch; }
+/* ================ */
+/* Bootstrap Integration */
+/* ================ */
 
-/* Product Grid Specific Fixes */
+/* Bootstrap-compatible utilities */
+.d-flex { display: flex !important; }
+.d-inline-flex { display: inline-flex !important; }
+.flex-row { flex-direction: row !important; }
+.flex-column { flex-direction: column !important; }
+.flex-wrap { flex-wrap: wrap !important; }
+.flex-nowrap { flex-wrap: nowrap !important; }
+.justify-content-start { justify-content: flex-start !important; }
+.justify-content-end { justify-content: flex-end !important; }
+.justify-content-center { justify-content: center !important; }
+.justify-content-between { justify-content: space-between !important; }
+.justify-content-around { justify-content: space-around !important; }
+.align-items-start { align-items: flex-start !important; }
+.align-items-end { align-items: flex-end !important; }
+.align-items-center { align-items: center !important; }
+.align-items-stretch { align-items: stretch !important; }
+
+/* Bootstrap-compatible text utilities */
+.text-start { text-align: left !important; }
+.text-end { text-align: right !important; }
+.text-center { text-align: center !important; }
+
+/* Bootstrap-compatible spacing */
+.mb-0 { margin-bottom: 0 !important; }
+.mb-1 { margin-bottom: 0.25rem !important; }
+.mb-2 { margin-bottom: 0.5rem !important; }
+.mb-3 { margin-bottom: 1rem !important; }
+.mb-4 { margin-bottom: 1.5rem !important; }
+.mb-5 { margin-bottom: 3rem !important; }
+
+/* Bootstrap-compatible gaps */
+.g-1 { gap: 0.25rem !important; }
+.g-2 { gap: 0.5rem !important; }
+.g-3 { gap: 1rem !important; }
+.g-4 { gap: 1.5rem !important; }
+.g-5 { gap: 3rem !important; }
+
+/* Product Grid Bootstrap Integration */
 .products-grid .row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-md);
+  --bs-gutter-x: 1rem;
+  --bs-gutter-y: 1rem;
 }
 
 .products-grid [class*="col-"] {
-  margin-bottom: var(--spacing-md);
-  min-height: 1px;
+  margin-bottom: 1rem;
 }
 
-/* Ensure product cards don't overlap */
-.product-card {
-  width: 100%;
-  margin-bottom: var(--spacing-md);
+/* Bootstrap-compatible badges */
+.badge {
+  display: inline-block;
+  padding: 0.35em 0.65em;
+  font-size: 0.75em;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.375rem;
 }
 
-/* Specific fixes for product list page */
-@media (min-width: 769px) {
-  .products-grid .col-4 {
-    width: calc(33.333333% - var(--spacing-md));
-    margin-right: var(--spacing-md);
-  }
-
-  .products-grid .col-4:nth-child(3n) {
-    margin-right: 0;
-  }
+.badge.bg-success {
+  background-color: #198754 !important;
 }
 
-@media (max-width: 768px) and (min-width: 577px) {
-  .products-grid .col-md-6 {
-    width: calc(50% - var(--spacing-sm));
-    margin-right: var(--spacing-sm);
-  }
-
-  .products-grid .col-md-6:nth-child(2n) {
-    margin-right: 0;
-  }
+.badge.bg-danger {
+  background-color: #dc3545 !important;
 }
 
-@media (max-width: 576px) {
-  .products-grid [class*="col-"] {
-    width: 100% !important;
-    margin-right: 0 !important;
-    margin-bottom: var(--spacing-md);
-  }
+/* Bootstrap-compatible buttons */
+.btn {
+  display: inline-block;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #212529;
+  text-align: center;
+  text-decoration: none;
+  vertical-align: middle;
+  cursor: pointer;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  background-color: transparent;
+  border: 1px solid transparent;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  border-radius: 0.375rem;
+  transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
+
+.btn-primary {
+  color: #fff;
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.btn-primary:hover {
+  color: #fff;
+  background-color: #0b5ed7;
+  border-color: #0a58ca;
+}
+
+/* Bootstrap-compatible cards */
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  word-wrap: break-word;
+  background-color: #fff;
+  background-clip: border-box;
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  border-radius: 0.375rem;
+}
+
+.card-body {
+  flex: 1 1 auto;
+  padding: 1rem;
+}
+
+/* Bootstrap-compatible images */
+.img-fluid {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Bootstrap-compatible typography */
+.h1, .h2, .h3, .h4, .h5, .h6,
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.h1 { font-size: 2.5rem; }
+.h2 { font-size: 2rem; }
+.h3 { font-size: 1.75rem; }
+.h4 { font-size: 1.5rem; }
+.h5 { font-size: 1.25rem; }
+.h6 { font-size: 1rem; }
+
+.lead {
+  font-size: 1.25rem;
+  font-weight: 300;
+}
+
+.display-1 {
+  font-size: 6rem;
+  font-weight: 300;
+  line-height: 1.2;
+}
+
+/* Bootstrap-compatible font weights */
+.fw-bold { font-weight: 700 !important; }
+.fw-normal { font-weight: 400 !important; }
+.fw-light { font-weight: 300 !important; }
+
+/* Bootstrap-compatible text colors */
+.text-primary { color: #0d6efd !important; }
+.text-muted { color: #6c757d !important; }
+.text-decoration-none { text-decoration: none !important; }
+
+/* Bootstrap-compatible display utilities */
+.d-block { display: block !important; }
+.d-inline { display: inline !important; }
+.d-inline-block { display: inline-block !important; }
+.d-none { display: none !important; }
+
+/* Bootstrap-compatible heights */
+.h-100 { height: 100% !important; }
 
 /* ================ */
 /* Banner Styles */

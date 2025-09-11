@@ -1,27 +1,35 @@
 <!DOCTYPE html>
-{% load static %}
+{% load static bootstrap5 %}
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <title>{% block title %}Catálogo de Joyería Fantasía{% endblock %}</title>
+
+    <!-- Bootstrap CSS -->
+    {% bootstrap_css %}
+
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
     <meta name="stripe-public-key" content="{{ STRIPE_PUBLIC_KEY }}">
 </head>
 <body>
     <header class="header">
-        <div class="container">
-            <div class="row align-center">
+        <div class="container-fluid">
+            <div class="row align-items-center">
                 <div class="col-6 col-md-4">
                     <a href="{% url 'home:index' %}" class="logo-link">
                         <h1 class="logo">Joyería Fantasía</h1>
                     </a>
                 </div>
-                <div class="col-6 col-md-8 text-right">
+                <div class="col-6 col-md-8 text-end">
                     <nav class="main-nav">
                         <a href="{% url 'home:index' %}" class="nav-link" title="Inicio" data-tooltip="Inicio">
                             <i class="fas fa-home"></i>
@@ -81,16 +89,16 @@
     </header>
 
     <main class="main-content">
-        <div class="container">
+        <div class="container-fluid">
             {% block content %}
             {% endblock %}
         </div>
     </main>
 
     <footer class="footer">
-        <div class="container">
-            <div class="footer-grid">
-                <div class="footer-section">
+        <div class="container-fluid">
+            <div class="row footer-grid">
+                <div class="col-md-4 col-sm-6 footer-section">
                     <h3 class="footer-title">Enlaces Rápidos</h3>
                     <ul class="footer-links">
                         <li><a href="{% url 'home:index' %}">Inicio</a></li>
@@ -98,7 +106,7 @@
                         <li><a href="{% url 'orders:order_history' %}">Mis Pedidos</a></li>
                     </ul>
                 </div>
-                <div class="footer-section">
+                <div class="col-md-4 col-sm-6 footer-section">
                     <h3 class="footer-title">Legal</h3>
                     <ul class="footer-links">
                         <li><a href="{% url 'orders:terms' %}">Términos y Condiciones</a></li>
@@ -106,7 +114,7 @@
                         <li><a href="#">Política de Envíos</a></li>
                     </ul>
                 </div>
-                <div class="footer-section">
+                <div class="col-md-4 col-sm-12 footer-section">
                     <h3 class="footer-title">Conectar</h3>
                     <div class="social-links">
                         {% for social in social_media %}
@@ -127,6 +135,9 @@
             </div>
         </div>
     </footer>
+
+    <!-- Bootstrap JS -->
+    {% bootstrap_javascript %}
 
     <script src="{% static 'js/main.js' %}"></script>
     {% block extra_js %}
