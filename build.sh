@@ -3,14 +3,14 @@
 
 echo "Iniciando construcción de la aplicación..."
 
-# Instalar dependencias con pip3 (más compatible en Render)
+# Instalar dependencias
 echo "Instalando dependencias..."
-pip3 install --upgrade pip
-pip3 install -r requirements.txt
+pip install --upgrade pip
+pip install -r requirements.txt
 
-# Verificar instalación de psycopg2
-echo "Verificando instalación de psycopg2..."
-python3 -c "import psycopg2; print('psycopg2 instalado correctamente')"
+# Verificar instalación de psycopg
+echo "Verificando instalación de psycopg..."
+python -c "import psycopg; print('psycopg instalado correctamente')"
 
 # Crear directorios necesarios
 echo "Creando directorios necesarios..."
@@ -23,10 +23,10 @@ export PYTHONPATH=$PYTHONPATH:$(pwd)
 
 # Ejecutar migraciones
 echo "Ejecutando migraciones de base de datos..."
-python3 manage.py migrate --noinput
+python manage.py migrate --noinput
 
 # Recolectar archivos estáticos
 echo "Recolectando archivos estáticos..."
-python3 manage.py collectstatic --noinput --clear
+python manage.py collectstatic --noinput --clear
 
 echo "Construcción completada exitosamente!"
