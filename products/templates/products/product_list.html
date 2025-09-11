@@ -5,66 +5,59 @@
 {% endblock %}
 
 {% block content %}
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar -->
-            <aside class="col-lg-3 col-md-4 col-sm-12 mb-4">
-                <div class="sidebar-card">
-                    <h3 class="sidebar-title">Categories</h3>
-                    <ul class="category-list">
-                        <li {% if not category %}class="selected"{% endif %}>
-                            <a href="{% url 'products:product_list' %}">All Categories</a>
-                        </li>
-                        {% for c in categories %}
-                        <li {% if category.slug == c.slug %}class="selected"{% endif %}>
-                            <a href="{% url 'products:product_list_by_category' c.slug %}">
-                                {{ c.name }}
-                            </a>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </aside>
-
-            <!-- Main Content -->
-            <main class="col-lg-9 col-md-8 col-sm-12">
-                <div class="page-header mb-4">
-                    <h1>{% if category %}{{ category.name }}{% else %}All Products{% endif %}</h1>
-                </div>
-
-                <div class="row g-3">
-                    {% for product in products %}
-                    <div class="col-xl-4 col-lg-6 col-md-6 col-sm-6 col-12">
-                        <div class="product-card h-100">
-                            <a href="{% url 'products:product_detail' product.id product.slug %}" class="product-link text-decoration-none">
-                                {% if product.image %}
-                                <div class="product-image-container mb-3">
-                                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-image img-fluid rounded">
-                                </div>
-                                {% endif %}
-                                <div class="product-info">
-                                    <h3 class="product-title h5 mb-2">{{ product.name }}</h3>
-                                    <p class="product-meta text-muted small mb-2">{{ product.jewelry_type|title }} - {{ product.material|title }}</p>
-                                    <p class="product-price fw-bold text-primary mb-2">{{ product.display_price }}</p>
-                                    {% if product.stock > 0 %}
-                                    <span class="badge bg-success">In Stock</span>
-                                    {% else %}
-                                    <span class="badge bg-danger">Out of Stock</span>
-                                    {% endif %}
-                                </div>
-                            </a>
-                        </div>
-                    </div>
-                    {% empty %}
-                    <div class="col-12">
-                        <div class="empty-state text-center py-5">
-                            <i class="fas fa-gem empty-icon display-1 text-muted mb-3"></i>
-                            <p class="lead">No products available in this category.</p>
-                        </div>
-                    </div>
+    <div class="products-layout">
+        <!-- Sidebar -->
+        <aside class="products-sidebar">
+            <div class="sidebar-content">
+                <h3 class="sidebar-heading">
+                    <i class="fas fa-filter"></i>Categories
+                </h3>
+                <nav class="category-nav">
+                    <a href="{% url 'products:product_list' %}" {% if not category %}class="active"{% endif %}>
+                        <i class="fas fa-th-large"></i>All Categories
+                    </a>
+                    {% for c in categories %}
+                    <a href="{% url 'products:product_list_by_category' c.slug %}" {% if category.slug == c.slug %}class="active"{% endif %}>
+                        <i class="fas fa-tag"></i>{{ c.name }}
+                    </a>
                     {% endfor %}
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="products-main">
+            <header class="products-header">
+                <h1 class="products-title">
+                    {% if category %}
+                        <i class="fas fa-gem"></i>{{ category.name }}
+                    {% else %}
+                        <i class="fas fa-store"></i>All Products
+                    {% endif %}
+                </h1>
+                <p class="products-subtitle">
+                    {% if category %}
+                        Discover our beautiful {{ category.name|lower }} collection
+                    {% else %}
+                        Explore our complete collection of handcrafted jewelry
+                    {% endif %}
+                </p>
+            </header>
+
+            <div class="products-grid">
+                {% for product in products %}
+                    {% include 'products/_product_card.html' %}
+                {% empty %}
+                <div class="empty-state">
+                    <i class="fas fa-gem"></i>
+                    <h3>No products found</h3>
+                    <p>We couldn't find any products in this category. Try exploring other categories or check back later.</p>
+                    <a href="{% url 'products:product_list' %}" class="btn primary-btn">
+                        <i class="fas fa-arrow-left"></i>View All Products
+                    </a>
                 </div>
-            </main>
-        </div>
+                {% endfor %}
+            </div>
+        </main>
     </div>
 {% endblock %}

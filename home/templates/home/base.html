@@ -1,145 +1,77 @@
 <!DOCTYPE html>
-{% load static bootstrap5 %}
+{% load static django_bootstrap5 %}
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>{% block title %}Catálogo de Joyería Fantasía{% endblock %}</title>
+    <meta name="description" content="Joyería Fantasía - Colección única de piezas de joyería artesanal hechas a mano">
+    <meta name="keywords" content="joyería, fantasía, artesanal, handmade, anillos, collares, pulseras">
+    <meta name="author" content="Joyería Fantasía">
+
+    <title>{% block title %}Joyería Fantasía - Joyería Artesanal Única{% endblock %}</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{% static 'images/logos/favicon.ico' %}">
 
     <!-- Bootstrap CSS -->
     {% bootstrap_css %}
 
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-
+    <!-- Stripe -->
     <meta name="stripe-public-key" content="{{ STRIPE_PUBLIC_KEY }}">
+
+    {% block extra_head %}
+    {% endblock %}
 </head>
 <body>
-    <header class="header">
-        <div class="container-fluid">
-            <div class="row align-items-center">
-                <div class="col-6 col-md-4">
-                    <a href="{% url 'home:index' %}" class="logo-link">
-                        <h1 class="logo">Joyería Fantasía</h1>
-                    </a>
-                </div>
-                <div class="col-6 col-md-8 text-end">
-                    <nav class="main-nav">
-                        <a href="{% url 'home:index' %}" class="nav-link" title="Inicio" data-tooltip="Inicio">
-                            <i class="fas fa-home"></i>
-                            <span class="nav-text">Inicio</span>
-                        </a>
-                        <a href="{% url 'products:product_list' %}" class="nav-link" title="Productos" data-tooltip="Productos">
-                            <i class="fas fa-gem"></i>
-                            <span class="nav-text">Productos</span>
-                        </a>
-                        <a href="{% url 'cart:cart_detail' %}" class="nav-link cart-link" title="Carrito de compras" data-tooltip="Carrito">
-                            <i class="fas fa-shopping-cart"></i>
-                            <span class="cart-count">
-                                {% if cart.total_items > 0 %}{{ cart.total_items }}{% endif %}
-                            </span>
-                            <span class="nav-text">Carrito</span>
-                        </a>
-                        {% if user.is_authenticated %}
-                        <div class="nav-dropdown">
-                            <a href="#" class="nav-link user-menu-btn" title="Menú de usuario" data-tooltip="Mi cuenta">
-                                <i class="fas fa-user"></i>
-                                <span class="nav-text">{{ user.username|truncatechars:10 }}</span>
-                                <i class="fas fa-chevron-down dropdown-arrow"></i>
-                            </a>
-                            <div class="dropdown-menu">
-                                <a href="{% url 'accounts:profile' %}" class="dropdown-item" title="Ver mi perfil">
-                                    <i class="fas fa-user-circle"></i>
-                                    <span>Perfil</span>
-                                </a>
-                                <a href="{% url 'orders:order_history' %}" class="dropdown-item" title="Ver mis pedidos">
-                                    <i class="fas fa-history"></i>
-                                    <span>Pedidos</span>
-                                </a>
-                                <a href="{% url 'accounts:logout' %}" class="dropdown-item" title="Cerrar sesión">
-                                    <i class="fas fa-sign-out-alt"></i>
-                                    <span>Cerrar Sesión</span>
-                                </a>
-                            </div>
-                        </div>
-                        {% else %}
-                        <a href="{% url 'accounts:login' %}" class="nav-link" title="Iniciar sesión" data-tooltip="Iniciar Sesión">
-                            <i class="fas fa-sign-in-alt"></i>
-                            <span class="nav-text">Iniciar Sesión</span>
-                        </a>
-                        <a href="{% url 'accounts:register' %}" class="nav-link" title="Crear cuenta" data-tooltip="Registrarse">
-                            <i class="fas fa-user-plus"></i>
-                            <span class="nav-text">Registrarse</span>
-                        </a>
-                        {% endif %}
-                    </nav>
-                    <button class="mobile-menu-btn" aria-label="Menú de navegación" title="Abrir menú">
-                        <i class="fas fa-bars"></i>
-                        <span class="sr-only">Menú</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </header>
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
 
-    <main class="main-content">
-        <div class="container-fluid">
-            {% block content %}
-            {% endblock %}
+    <!-- Header -->
+    {% include 'home/_header.html' %}
+
+    <!-- Main Content -->
+    <main id="main-content" class="main-content">
+        <div class="content-background">
+            <div class="content-container">
+                {% block content %}
+                {% endblock %}
+            </div>
         </div>
     </main>
 
-    <footer class="footer">
-        <div class="container-fluid">
-            <div class="row footer-grid">
-                <div class="col-md-4 col-sm-6 footer-section">
-                    <h3 class="footer-title">Enlaces Rápidos</h3>
-                    <ul class="footer-links">
-                        <li><a href="{% url 'home:index' %}">Inicio</a></li>
-                        <li><a href="{% url 'products:product_list' %}">Productos</a></li>
-                        <li><a href="{% url 'orders:order_history' %}">Mis Pedidos</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-4 col-sm-6 footer-section">
-                    <h3 class="footer-title">Legal</h3>
-                    <ul class="footer-links">
-                        <li><a href="{% url 'orders:terms' %}">Términos y Condiciones</a></li>
-                        <li><a href="#">Política de Privacidad</a></li>
-                        <li><a href="#">Política de Envíos</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-4 col-sm-12 footer-section">
-                    <h3 class="footer-title">Conectar</h3>
-                    <div class="social-links">
-                        {% for social in social_media %}
-                        <a href="{{ social.url }}" aria-label="{{ social.name }}" title="{{ social.name }}" target="_blank" rel="noopener noreferrer">
-                            <i class="{{ social.platform_icon }}"></i>
-                        </a>
-                        {% empty %}
-                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
-                        <a href="#" aria-label="Pinterest"><i class="fab fa-pinterest-p"></i></a>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; {% now "Y" %} Catálogo de Joyería Fantasía. Todos los derechos reservados.</p>
-            </div>
-        </div>
-    </footer>
+    <!-- Footer -->
+    {% include 'home/_footer.html' %}
 
     <!-- Bootstrap JS -->
     {% bootstrap_javascript %}
 
+    <!-- Custom JS -->
     <script src="{% static 'js/main.js' %}"></script>
+
+    <!-- Initialize page functionality -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize common functionality
+            initNavbar();
+            initBackToTop();
+            initNewsletterSignup();
+        });
+    </script>
+
+    {% block page_js %}
+    {% endblock %}
+
     {% block extra_js %}
     {% endblock %}
 </body>

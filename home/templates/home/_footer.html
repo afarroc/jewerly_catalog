@@ -1,0 +1,126 @@
+{% load static %}
+<footer class="main-footer">
+    <div class="footer-container">
+        <div class="footer-content">
+            <!-- Company Info -->
+            <div class="footer-section">
+                <div class="footer-logo">
+                    <img src="{% static 'images/logos/logo.png' %}" alt="Joyería Fantasía" onerror="this.style.display='none'">
+                    <h3>Joyería Fantasía</h3>
+                </div>
+                <p class="footer-description">
+                    Descubre nuestra colección única de piezas de joyería fantasía hechas a mano con amor y dedicación.
+                    Cada pieza cuenta una historia de artesanía tradicional y diseño moderno.
+                </p>
+                <div class="social-links">
+                    <a href="#" class="social-link" aria-label="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="social-link" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="#" class="social-link" aria-label="Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="social-link" aria-label="Pinterest">
+                        <i class="fab fa-pinterest-p"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="footer-section">
+                <h4 class="footer-title">Enlaces Rápidos</h4>
+                <ul class="footer-links">
+                    <li><a href="{% url 'home:index' %}">Inicio</a></li>
+                    <li><a href="{% url 'products:product_list' %}">Productos</a></li>
+                    <li><a href="{% url 'cart:cart_detail' %}">Carrito de Compras</a></li>
+                    {% if user.is_authenticated %}
+                    <li><a href="{% url 'accounts:profile' %}">Mi Perfil</a></li>
+                    <li><a href="{% url 'orders:order_history' %}">Mis Pedidos</a></li>
+                    {% else %}
+                    <li><a href="{% url 'accounts:login' %}">Iniciar Sesión</a></li>
+                    <li><a href="{% url 'accounts:register' %}">Registrarse</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <!-- Categories -->
+            <div class="footer-section">
+                <h4 class="footer-title">Categorías</h4>
+                <ul class="footer-links">
+                    <li><a href="{% url 'products:product_list' %}">Todos los Productos</a></li>
+                    <li><a href="{% url 'products:product_list_by_category' 'anillos' %}">Anillos</a></li>
+                    <li><a href="{% url 'products:product_list_by_category' 'collares' %}">Collares</a></li>
+                    <li><a href="{% url 'products:product_list_by_category' 'pulseras' %}">Pulseras</a></li>
+                    <li><a href="{% url 'products:product_list_by_category' 'aros' %}">Aros</a></li>
+                </ul>
+            </div>
+
+            <!-- Contact Info -->
+            <div class="footer-section">
+                <h4 class="footer-title">Contacto</h4>
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Av. Principal 123, Lima, Perú</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-phone"></i>
+                        <span>+51 123 456 789</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-envelope"></i>
+                        <span>info@joyeriafantasia.com</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fas fa-clock"></i>
+                        <span>Lun - Sab: 9:00 - 18:00</span>
+                    </div>
+                </div>
+
+                <!-- Newsletter Signup -->
+                <div class="newsletter-signup">
+                    <h5>Suscríbete a nuestro newsletter</h5>
+                    <form class="newsletter-form" id="newsletter-form">
+                        <input type="email" placeholder="Tu email" required>
+                        <button type="submit">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Bottom -->
+        <div class="footer-bottom">
+            <div class="footer-bottom-content">
+                <div class="copyright">
+                    <p>&copy; {% now "Y" %} Joyería Fantasía. Todos los derechos reservados.</p>
+                </div>
+
+                <div class="footer-bottom-links">
+                    <a href="#">Política de Privacidad</a>
+                    <a href="#">Términos de Servicio</a>
+                    <a href="#">Política de Devoluciones</a>
+                    <a href="#">Política de Envío</a>
+                </div>
+
+                <div class="payment-methods">
+                    <span>Aceptamos:</span>
+                    <div class="payment-icons">
+                        <i class="fab fa-cc-visa" title="Visa"></i>
+                        <i class="fab fa-cc-mastercard" title="Mastercard"></i>
+                        <i class="fab fa-cc-paypal" title="PayPal"></i>
+                        <i class="fas fa-credit-card" title="Other Cards"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="back-to-top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+</footer>

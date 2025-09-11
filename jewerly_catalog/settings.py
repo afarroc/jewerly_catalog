@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
 
     # Third-party apps
-    'bootstrap5',
+    'django_bootstrap5',
 
     # Local Apps
     'home',
@@ -81,6 +81,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'products.context_processors.categories',
                 'cart.context_processors.cart',
+                'home.context_processors.social_media',
             ],
         },
     },
