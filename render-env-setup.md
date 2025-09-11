@@ -39,6 +39,22 @@ DEFAULT_SHIPPING_COST=5.00
 LOGGING_LEVEL=INFO
 ```
 
+## Configuración del Build Command
+
+En Render Dashboard > Tu Servicio Web > Settings:
+
+### Build Command
+```
+bash build.sh
+```
+
+### Start Command
+```
+gunicorn jewerly_catalog.wsgi:application --bind 0.0.0.0:$PORT
+```
+
+**Nota:** El Build Command ejecuta automáticamente el script `build.sh` que instala dependencias, ejecuta migraciones y recolecta archivos estáticos.
+
 ## Pasos de Seguridad
 
 1. **Genera una SECRET_KEY segura:**
