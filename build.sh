@@ -37,4 +37,8 @@ python3 manage.py migrate --noinput
 echo "Recolectando archivos estáticos..."
 python3 manage.py collectstatic --noinput --clear
 
+# Crear usuario administrador
+echo "Creando usuario administrador..."
+python3 create_superuser.py
+
 echo "Construcción completada exitosamente!"
