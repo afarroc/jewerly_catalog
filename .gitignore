@@ -39,8 +39,14 @@ database.db
 # Django
 /media/
 /staticfiles/
-/static/
 /logs/
+
+# Static files - Allow custom static files but ignore generated ones
+!/static/
+static/*/
+!static/css/
+!static/js/
+!static/images/
 
 # Python
 __pycache__/

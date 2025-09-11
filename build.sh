@@ -31,6 +31,7 @@ python3 manage.py check --deploy
 
 # Ejecutar migraciones
 echo "Ejecutando migraciones de base de datos..."
+python3 manage.py makemigrations --noinput
 python3 manage.py migrate --noinput
 
 # Recolectar archivos estáticos
