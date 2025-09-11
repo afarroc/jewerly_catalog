@@ -4,12 +4,17 @@ Catálogo de joyería desarrollado con Django para venta en línea.
 
 ## Características
 
-- 🛒 Carrito de compras
-- 💳 Integración con Stripe para pagos
+- 🛒 Carrito de compras completo
+- 💳 Integración con Stripe para pagos seguros
 - 👤 Sistema de autenticación de usuarios
-- 📧 Sistema de pedidos y confirmaciones
-- 📱 Diseño responsivo
+- 📧 Sistema de pedidos y confirmaciones por email
+- 📱 **Diseño completamente responsivo** - Optimizado para móviles, tablets y desktop
 - 🔒 Configuración segura para producción
+- ⚡ Rendimiento optimizado con WhiteNoise
+- 🎨 Interfaz moderna con animaciones suaves
+- ♿ Accesibilidad mejorada con navegación por teclado
+- 🌙 Soporte para modo de alto contraste
+- 📊 Sistema de grid flexible de 12 columnas
 
 ## Tecnologías
 
@@ -65,6 +70,61 @@ python manage.py createsuperuser
 7. Ejecuta el servidor:
 ```bash
 python manage.py runserver
+```
+
+### Opción 2: Script Automático (Recomendado)
+
+Para desarrollo local, usa el script automatizado:
+```bash
+# Configuración completa de desarrollo
+./dev_setup.sh
+
+# O en Windows:
+# bash dev_setup.sh
+```
+
+Este script:
+- ✅ Instala dependencias
+- ✅ Configura entorno de desarrollo
+- ✅ Ejecuta migraciones
+- ✅ Crea usuario administrador
+- ✅ **NO ejecuta collectstatic** (más rápido para desarrollo)
+
+### Archivos Estáticos en Desarrollo vs Producción
+
+| Entorno | Archivos Estáticos | Comando | Notas |
+|---------|-------------------|---------|-------|
+| **Desarrollo** | Servidos desde `static/` | `python manage.py runserver` | Cambios inmediatos, sin collectstatic |
+| **Producción** | Optimizados en `staticfiles/` | `python manage.py collectstatic` | WhiteNoise + compresión |
+
+Para verificar la configuración:
+```bash
+python test_static_files.py
+```
+
+### Gestión de Archivos Estáticos
+
+#### **En Desarrollo Local:**
+```bash
+# Los archivos se sirven automáticamente desde static/
+python manage.py runserver
+
+# Para probar collectstatic manualmente:
+python manage.py collectstatic --noinput
+```
+
+#### **En Producción (Render):**
+- ✅ **Collectstatic automático** en cada despliegue
+- ✅ **WhiteNoise activado** para servir archivos estáticos
+- ✅ **Compresión Gzip** automática
+- ✅ **Cache headers** optimizados
+- ✅ **Versionado de archivos** para evitar problemas de cache
+
+#### **Configuración de WhiteNoise:**
+```python
+# settings.py
+if not DEBUG:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 ```
 
 ## Despliegue en Render
@@ -140,7 +200,101 @@ Para configurar las variables de entorno en producción:
 
 ### 6. Archivos Estáticos
 
-Los archivos estáticos se sirven automáticamente con WhiteNoise. No se requiere configuración adicional.
+Los archivos estáticos se procesan automáticamente durante el despliegue:
+
+#### **Collectstatic Automático:**
+- ✅ **Activado en producción**: Se ejecuta cuando `DEBUG=False`
+- ✅ **Script build.sh**: Maneja todo el proceso automáticamente
+- ✅ **Verificación incluida**: Confirma que los archivos se procesaron correctamente
+
+#### **Proceso de Collectstatic:**
+1. **Verificación**: Confirma que existe el directorio `static/`
+2. **Recopilación**: Junta todos los archivos estáticos
+3. **Optimización**: WhiteNoise comprime y optimiza
+4. **Almacenamiento**: Guarda en `staticfiles/` con versionado
+5. **Cache**: Configura headers de cache apropiados
+
+#### **Configuración de WhiteNoise:**
+```python
+# settings.py - Configuración automática
+if not DEBUG:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+```
+
+#### **Beneficios en Producción:**
+- ✅ **Compresión Gzip** automática
+- ✅ **Cache agresivo** para mejor rendimiento
+- ✅ **Versionado de archivos** (evita problemas de cache)
+- ✅ **Soporte CDN** preparado
+- ✅ **Fallback inteligente** para archivos faltantes
+
+#### **Archivos Procesados:**
+- ✅ **CSS**: Comprimido y minificado
+- ✅ **JavaScript**: Optimizado
+- ✅ **Imágenes**: Con cache apropiado
+- ✅ **Fuentes**: Optimizadas
+- ✅ **Archivos de Django**: Admin, etc.
+
+**No se requiere configuración adicional** - el sistema detecta automáticamente el entorno y aplica la configuración correcta.
+
+## Diseño Responsive
+
+El sitio está completamente optimizado para todos los dispositivos:
+
+### 📱 **Breakpoints y Dispositivos Soportados**
+
+| Dispositivo | Ancho | Características |
+|-------------|-------|----------------|
+| **Desktop Grande** | > 1200px | Layout completo, navegación horizontal |
+| **Desktop** | 992px - 1200px | Layout adaptado, navegación horizontal |
+| **Tablet** | 768px - 992px | Menú móvil, grid de 2 columnas |
+| **Móvil Grande** | 576px - 768px | Menú móvil, grid de 1 columna |
+| **Móvil Pequeño** | < 576px | Optimizado para touch, navegación simplificada |
+
+### 🎯 **Características Responsive**
+
+#### **Navegación**
+- ✅ Menú hamburguesa en móviles
+- ✅ Navegación por teclado completa
+- ✅ Dropdowns accesibles
+- ✅ Indicador de carrito visible
+
+#### **Layout**
+- ✅ Sistema de grid flexible de 12 columnas
+- ✅ Contenedores adaptativos
+- ✅ Espaciado responsive
+- ✅ Tipografía escalable
+
+#### **Componentes**
+- ✅ Botones touch-friendly (mínimo 44px)
+- ✅ Formularios optimizados para móvil
+- ✅ Imágenes responsive con aspect-ratio
+- ✅ Cards con hover states apropiados
+
+#### **Accesibilidad**
+- ✅ Soporte para `prefers-reduced-motion`
+- ✅ Modo de alto contraste
+- ✅ Navegación por teclado
+- ✅ Skip links para lectores de pantalla
+
+### 📊 **Sistema de Grid**
+
+```css
+/* Ejemplo de uso del grid responsive */
+<div class="row">
+  <div class="col-12 col-md-6 col-lg-4">
+    <!-- Contenido responsive -->
+  </div>
+</div>
+```
+
+### 🎨 **Optimizaciones de Rendimiento**
+
+- ✅ Animaciones optimizadas para móviles
+- ✅ Carga diferida de imágenes
+- ✅ Transiciones suaves con hardware acceleration
+- ✅ Estados de carga visuales
+- ✅ Optimización para touch devices
 
 ## Estructura del Proyecto
 
@@ -151,8 +305,8 @@ jewerly_catalog/
 ├── home/             # Página principal
 ├── orders/           # Sistema de pedidos
 ├── products/         # Gestión de productos
-├── static/           # Archivos estáticos
-├── templates/        # Plantillas HTML
+├── static/           # Archivos estáticos optimizados
+├── templates/        # Plantillas HTML responsive
 ├── jewerly_catalog/  # Configuración principal
 ├── manage.py
 ├── requirements.txt

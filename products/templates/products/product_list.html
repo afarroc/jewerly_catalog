@@ -5,9 +5,9 @@
 {% endblock %}
 
 {% block content %}
-    <div class="row">
-        <!-- Sidebar - 3 columns on desktop, 12 on mobile -->
-        <aside class="col-3 col-md-12 col-sm-12 mb-4">
+    <div class="product-list-layout">
+        <!-- Sidebar -->
+        <aside class="product-list-sidebar">
             <div class="sidebar-card">
                 <h3 class="sidebar-title">Categories</h3>
                 <ul class="category-list">
@@ -25,15 +25,15 @@
             </div>
         </aside>
 
-        <!-- Main Content - 9 columns on desktop, 12 on mobile -->
-        <main class="col-9 col-md-12 col-sm-12">
+        <!-- Main Content -->
+        <main class="product-list-main">
             <div class="page-header">
                 <h1>{% if category %}{{ category.name }}{% else %}All Products{% endif %}</h1>
             </div>
             
-            <div class="row">
+            <div class="row products-grid">
                 {% for product in products %}
-                <div class="col-4 col-md-6 col-sm-12 mb-4">
+                <div class="col-4 col-md-6 col-sm-12">
                     <div class="product-card">
                         <a href="{% url 'products:product_detail' product.id product.slug %}" class="product-link">
                             {% if product.image %}
