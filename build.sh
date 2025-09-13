@@ -18,7 +18,7 @@ python3 -c "import whitenoise; print('WhiteNoise OK')"
 
 # Crear directorios necesarios
 echo "Creando directorios necesarios..."
-mkdir -p staticfiles media
+mkdir -p staticfiles media logs
 
 # Configurar variables de entorno
 echo "Configurando variables de entorno..."
