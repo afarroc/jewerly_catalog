@@ -81,6 +81,58 @@
                 </div>
             </div>
 
+            <!-- Folder Structure -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Estructura de Carpetas</h5>
+                </div>
+                <div class="card-body">
+                    {% if diagnostic_info.folders.error %}
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Error al verificar carpetas: {{ diagnostic_info.folders.error }}
+                        </div>
+                    {% else %}
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <h4 class="text-primary">{{ diagnostic_info.folders.count }}</h4>
+                                    <small class="text-muted">Carpetas encontradas</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <h4 class="text-success">{{ diagnostic_info.folders.total_objects }}</h4>
+                                    <small class="text-muted">Archivos totales</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <div class="alert alert-info py-2">
+                                        <small><strong>Nota:</strong> Las carpetas se crean automáticamente</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if diagnostic_info.folders.list %}
+                            <div class="mt-3">
+                                <h6>Carpetas detectadas:</h6>
+                                <div class="row">
+                                    {% for folder in diagnostic_info.folders.list %}
+                                        <div class="col-md-6 mb-2">
+                                            <code class="d-block p-2 bg-light rounded">
+                                                📁 {{ folder }}/
+                                            </code>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
             <!-- Recent Uploads -->
             {% if diagnostic_info.recent_uploads %}
                 <div class="card mb-4">

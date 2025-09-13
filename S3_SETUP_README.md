@@ -123,6 +123,47 @@ Los logs detallados se muestran en la consola de Render:
 #### ❌ Archivos se guardan en BD pero no en S3
 **Solución:** Verificar conectividad S3 y permisos de escritura
 
+## Estructura de Carpetas en S3
+
+### Carpetas Automáticas
+**NO es necesario crear carpetas manualmente en S3.** Django las crea automáticamente:
+
+#### Para Productos (`upload_to='products/'`):
+```
+management360/
+└── products/
+    ├── imagen1.jpg
+    ├── imagen2.png
+    └── imagen3.gif
+```
+
+#### Para Imágenes Simples (`upload_to='uploads/%Y/%m/%d/'`):
+```
+management360/
+└── uploads/
+    ├── 2025/
+    │   ├── 09/
+    │   │   ├── 13/
+    │   │   │   ├── imagen1.jpg
+    │   │   │   └── imagen2.png
+    │   │   └── 14/
+    │   │       └── imagen3.gif
+    │   └── 10/
+    │       └── 01/
+    │           └── imagen4.jpg
+```
+
+### Verificación de Carpetas
+Ejecutar el script de diagnóstico:
+```bash
+python test_s3.py
+```
+
+O acceder a la página de diagnóstico:
+```
+https://your-domain.com/products/diagnostic/s3/
+```
+
 ## URLs de Acceso
 
 ### Desarrollo (Filesystem)

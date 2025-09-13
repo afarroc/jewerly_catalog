@@ -524,14 +524,20 @@ def s3_diagnostic(request):
     }
 
     # Test 1: Environment variables
+    from django.conf import settings
+    aws_access_key = getattr(settings, 'AWS_ACCESS_KEY_ID', None)
+    aws_secret_key = getattr(settings, 'AWS_SECRET_ACCESS_KEY', None)
+    bucket_name = getattr(settings, 'AWS_STORAGE_BUCKET_NAME', 'management360')
+    region_name = getattr(settings, 'AWS_S3_REGION_NAME', 'us-east-2')
+
     diagnostic_info['tests'].append({
         'name': 'Environment Variables',
-        'status': 'success' if os.getenv('AWS_ACCESS_KEY_ID') and os.getenv('AWS_SECRET_ACCESS_KEY') else 'error',
+        'status': 'success' if aws_access_key and aws_secret_key else 'error',
         'details': {
-            'AWS_ACCESS_KEY_ID': 'Set' if os.getenv('AWS_ACCESS_KEY_ID') else 'Not set',
-            'AWS_SECRET_ACCESS_KEY': 'Set' if os.getenv('AWS_SECRET_ACCESS_KEY') else 'Not set',
-            'AWS_STORAGE_BUCKET_NAME': os.getenv('AWS_STORAGE_BUCKET_NAME', 'Not set'),
-            'AWS_S3_REGION_NAME': os.getenv('AWS_S3_REGION_NAME', 'us-east-2 (default)')
+            'AWS_ACCESS_KEY_ID': 'Set' if aws_access_key else 'Not set',
+            'AWS_SECRET_ACCESS_KEY': 'Set' if aws_secret_key else 'Not set',
+            'AWS_STORAGE_BUCKET_NAME': bucket_name,
+            'AWS_S3_REGION_NAME': region_name
         }
     })
 
@@ -592,7 +598,38 @@ def s3_diagnostic(request):
             }
         })
 
-    # Test 4: Recent uploads
+    # Test 4: Folder structure
+    try:
+        if hasattr(default_storage, 'bucket'):
+            all_objects = list(default_storage.bucket.objects.all().limit(50))
+            folders = set()
+
+            for obj in all_objects:
+                key_parts = obj.key.split('/')
+                if len(key_parts) > 1:
+                    folder_path = '/'.join(key_parts[:-1])
+                    folders.add(folder_path)
+
+            diagnostic_info['folders'] = {
+                'count': len(folders),
+                'list': sorted(list(folders))[:10],  # Show first 10 folders
+                'total_objects': len(all_objects)
+            }
+        else:
+            diagnostic_info['folders'] = {
+                'count': 0,
+                'list': [],
+                'total_objects': 0,
+                'note': 'Local storage - folders created automatically'
+            }
+    except Exception as e:
+        diagnostic_info['folders'] = {
+            'error': str(e),
+            'count': 0,
+            'list': []
+        }
+
+    # Test 5: Recent uploads
     recent_uploads = ImageUpload.objects.filter(
         uploaded_at__gte=timezone.now() - timezone.timedelta(hours=24)
     ).order_by('-uploaded_at')[:5]

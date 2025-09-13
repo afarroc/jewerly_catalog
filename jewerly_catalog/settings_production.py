@@ -100,8 +100,6 @@ MIDDLEWARE.insert(0, 'django.middleware.gzip.GZipMiddleware')
 # MIDDLEWARE.append('django_prometheus.middleware.PrometheusAfterMiddleware')
 
 # AWS S3 Configuration for Media Files
-import storages
-
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
 AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME', 'management360')  # Default bucket name
@@ -127,35 +125,9 @@ if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and AWS_STORAGE_BUCKET_NAME:
     print(f"[S3] AWS_ACCESS_KEY_ID configured: {'Yes' if AWS_ACCESS_KEY_ID else 'No'}")
     print(f"[S3] AWS_SECRET_ACCESS_KEY configured: {'Yes' if AWS_SECRET_ACCESS_KEY else 'No'}")
 
+    # Use standard S3 storage (compatible with django-storages 1.14.4)
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
     MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
-
-    # Custom S3 storage class for better error handling
-    class MediaStorage(storages.backends.s3boto3.S3Boto3Storage):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            print(f"[S3] MediaStorage initialized for bucket: {self.bucket_name}")
-
-        def save(self, name, content, max_length=None):
-            try:
-                result = super().save(name, content, max_length)
-                print(f"[S3] File saved successfully: {name}")
-                return result
-            except Exception as e:
-                print(f"[S3] Error saving file {name}: {str(e)}")
-                raise
-
-        def delete(self, name):
-            try:
-                result = super().delete(name)
-                print(f"[S3] File deleted successfully: {name}")
-                return result
-            except Exception as e:
-                print(f"[S3] Error deleting file {name}: {str(e)}")
-                raise
-
-    # Use custom storage class
-    DEFAULT_FILE_STORAGE = 'jewerly_catalog.settings_production.MediaStorage'
 
 else:
     print("[S3] S3 credentials not found, using local storage")

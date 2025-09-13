@@ -16,10 +16,7 @@ django.setup()
 
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
-from jewerly_catalog.settings_production import (
-    AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
-    AWS_STORAGE_BUCKET_NAME, AWS_S3_REGION_NAME
-)
+from django.conf import settings
 
 def test_s3_configuration():
     """Test S3 configuration and connectivity"""
@@ -27,10 +24,15 @@ def test_s3_configuration():
 
     # Check environment variables
     print("1. Environment Variables:")
-    print(f"   AWS_ACCESS_KEY_ID: {'✓ Set' if AWS_ACCESS_KEY_ID else '✗ Not set'}")
-    print(f"   AWS_SECRET_ACCESS_KEY: {'✓ Set' if AWS_SECRET_ACCESS_KEY else '✗ Not set'}")
-    print(f"   AWS_STORAGE_BUCKET_NAME: {AWS_STORAGE_BUCKET_NAME or '✗ Not set'}")
-    print(f"   AWS_S3_REGION_NAME: {AWS_S3_REGION_NAME or 'us-east-2 (default)'}")
+    aws_access_key = getattr(settings, 'AWS_ACCESS_KEY_ID', None)
+    aws_secret_key = getattr(settings, 'AWS_SECRET_ACCESS_KEY', None)
+    bucket_name = getattr(settings, 'AWS_STORAGE_BUCKET_NAME', 'management360')
+    region_name = getattr(settings, 'AWS_S3_REGION_NAME', 'us-east-2')
+
+    print(f"   AWS_ACCESS_KEY_ID: {'✓ Set' if aws_access_key else '✗ Not set'}")
+    print(f"   AWS_SECRET_ACCESS_KEY: {'✓ Set' if aws_secret_key else '✗ Not set'}")
+    print(f"   AWS_STORAGE_BUCKET_NAME: {bucket_name}")
+    print(f"   AWS_S3_REGION_NAME: {region_name}")
     print()
 
     # Check storage configuration
@@ -53,8 +55,33 @@ def test_s3_configuration():
         print(f"   ✗ Cannot connect to bucket: {str(e)}")
     print()
 
+    # Test folder structure
+    print("4. Folder Structure Test:")
+    try:
+        # List all objects to see folder structure
+        all_objects = list(default_storage.bucket.objects.all().limit(20))
+        folders = set()
+
+        for obj in all_objects:
+            # Extract folder path from key
+            key_parts = obj.key.split('/')
+            if len(key_parts) > 1:
+                folder_path = '/'.join(key_parts[:-1])  # Everything except filename
+                folders.add(folder_path)
+
+        print(f"   ✓ Found {len(folders)} folder(s) in bucket:")
+        for folder in sorted(folders):
+            print(f"      📁 {folder}/")
+
+        if not folders:
+            print("   ℹ️  No folders found yet (they are created when files are uploaded)")
+
+    except Exception as e:
+        print(f"   ✗ Could not check folder structure: {str(e)}")
+    print()
+
     # Test file upload
-    print("4. Upload Test:")
+    print("5. Upload Test:")
     test_content = b"Hello, S3! This is a test file."
     test_filename = "test_s3_upload.txt"
 
