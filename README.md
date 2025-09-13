@@ -400,6 +400,92 @@ python manage.py test
 3. Configura los webhooks para confirmar pagos
 4. Agrega las claves a las variables de entorno
 
+## Configuración de AWS S3 para Media Files
+
+### 1. Crear Bucket S3
+
+1. Ve a la [Consola de AWS S3](https://console.aws.amazon.com/s3/)
+2. Crea un nuevo bucket con un nombre único
+3. Selecciona la región más cercana a tus usuarios (ej: us-east-1)
+4. Desactiva "Block all public access" para permitir acceso público a los archivos media
+
+### 2. Configurar CORS en S3
+
+En la consola de AWS S3, ve a tu bucket > Permissions > CORS configuration y agrega:
+
+```json
+[
+    {
+        "AllowedHeaders": [
+            "*"
+        ],
+        "AllowedMethods": [
+            "GET",
+            "PUT",
+            "POST",
+            "DELETE"
+        ],
+        "AllowedOrigins": [
+            "*"
+        ],
+        "ExposeHeaders": []
+    }
+]
+```
+
+### 3. Crear Usuario IAM
+
+1. Ve a [IAM Console](https://console.aws.amazon.com/iam/)
+2. Crea un nuevo usuario con acceso programático
+3. Adjunta la política `AmazonS3FullAccess` o crea una política personalizada:
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:DeleteObject"
+            ],
+            "Resource": "arn:aws:s3:::tu-bucket-name/*"
+        }
+    ]
+}
+```
+
+### 4. Configurar Variables de Entorno
+
+En tu archivo `.env.production`, actualiza las variables AWS:
+
+```bash
+AWS_ACCESS_KEY_ID=tu_access_key_id_de_aws
+AWS_SECRET_ACCESS_KEY=tu_secret_access_key_de_aws
+AWS_STORAGE_BUCKET_NAME=tu-bucket-name-s3
+AWS_S3_REGION_NAME=us-east-1
+```
+
+### 5. Verificar Configuración
+
+Después del despliegue, verifica que los archivos media se suban correctamente a S3 ejecutando:
+
+```bash
+python manage.py shell
+```
+
+```python
+from django.core.files.base import ContentFile
+from products.models import Product
+
+# Crear un archivo de prueba
+product = Product.objects.first()
+if product:
+    product.image.save('test.jpg', ContentFile(b'test image content'))
+    print(f"Imagen subida: {product.image.url}")
+```
+
 ## Contribución
 
 1. Fork el proyecto
