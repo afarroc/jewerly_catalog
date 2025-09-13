@@ -11,6 +11,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
+from django.conf import settings
 from rest_framework import generics, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -512,156 +513,196 @@ def image_delete(request, image_id):
 @login_required
 def s3_diagnostic(request):
     """Diagnostic view for S3 configuration and connectivity"""
-    user = request.user.username or 'Anonymous'
-
-    diagnostic_info = {
-        'timestamp': timezone.now(),
-        'user': user,
-        'storage_type': default_storage.__class__.__name__,
-        'bucket_name': getattr(default_storage, 'bucket_name', 'N/A'),
-        'region': getattr(default_storage, 'region_name', 'N/A'),
-        'tests': []
-    }
-
-    # Test 1: Environment variables
-    from django.conf import settings
-    aws_access_key = getattr(settings, 'AWS_ACCESS_KEY_ID', None)
-    aws_secret_key = getattr(settings, 'AWS_SECRET_ACCESS_KEY', None)
-    bucket_name = getattr(settings, 'AWS_STORAGE_BUCKET_NAME', 'management360')
-    region_name = getattr(settings, 'AWS_S3_REGION_NAME', 'us-east-2')
-
-    diagnostic_info['tests'].append({
-        'name': 'Environment Variables',
-        'status': 'success' if aws_access_key and aws_secret_key else 'error',
-        'details': {
-            'AWS_ACCESS_KEY_ID': 'Set' if aws_access_key else 'Not set',
-            'AWS_SECRET_ACCESS_KEY': 'Set' if aws_secret_key else 'Not set',
-            'AWS_STORAGE_BUCKET_NAME': bucket_name,
-            'AWS_S3_REGION_NAME': region_name
-        }
-    })
-
-    # Test 2: Storage connectivity
     try:
-        # Check if it's S3 storage
-        if hasattr(default_storage, 'bucket') and hasattr(default_storage.bucket, 'objects'):
-            # Try to list objects (limited)
-            objects = list(default_storage.bucket.objects.limit(5))
-            diagnostic_info['tests'].append({
-                'name': 'S3 Connectivity',
-                'status': 'success',
-                'details': {
-                    'objects_found': len(objects),
-                    'sample_objects': [obj.key for obj in objects[:3]] if objects else []
-                }
-            })
-        else:
-            # Not S3 storage
-            diagnostic_info['tests'].append({
-                'name': 'Storage Type',
-                'status': 'info',
-                'details': {
-                    'storage_type': default_storage.__class__.__name__,
-                    'note': 'Not S3 storage - using local filesystem'
-                }
-            })
-    except Exception as e:
-        diagnostic_info['tests'].append({
-            'name': 'S3 Connectivity',
-            'status': 'error',
-            'details': {
-                'error': str(e),
-                'error_type': type(e).__name__,
-                'storage_type': default_storage.__class__.__name__
-            }
-        })
+        user = request.user.username or 'Anonymous'
 
-    # Test 3: File upload
-    try:
-        test_content = b"S3 diagnostic test file - {timezone.now()}"
-        test_filename = f"diagnostic_test_{int(timezone.now().timestamp())}.txt"
-
-        file_obj = ContentFile(test_content)
-        saved_name = default_storage.save(test_filename, file_obj)
-
-        # Check if file exists
-        exists = default_storage.exists(saved_name)
-        file_url = default_storage.url(saved_name) if hasattr(default_storage, 'url') else 'No URL method'
-
-        # Clean up
-        default_storage.delete(saved_name)
-
-        diagnostic_info['tests'].append({
-            'name': 'File Upload Test',
-            'status': 'success' if exists else 'warning',
-            'details': {
-                'file_saved': saved_name,
-                'file_exists': exists,
-                'file_url': file_url,
-                'cleanup_successful': True
-            }
-        })
-    except Exception as e:
-        diagnostic_info['tests'].append({
-            'name': 'File Upload Test',
-            'status': 'error',
-            'details': {
-                'error': str(e),
-                'error_type': type(e).__name__
-            }
-        })
-
-    # Test 4: Folder structure
-    try:
-        if hasattr(default_storage, 'bucket') and hasattr(default_storage.bucket, 'objects'):
-            all_objects = list(default_storage.bucket.objects.all().limit(50))
-            folders = set()
-
-            for obj in all_objects:
-                key_parts = obj.key.split('/')
-                if len(key_parts) > 1:
-                    folder_path = '/'.join(key_parts[:-1])
-                    folders.add(folder_path)
-
-            diagnostic_info['folders'] = {
-                'count': len(folders),
-                'list': sorted(list(folders))[:10],  # Show first 10 folders
-                'total_objects': len(all_objects)
-            }
-        else:
-            diagnostic_info['folders'] = {
+        # Basic info
+        diagnostic_info = {
+            'timestamp': timezone.now(),
+            'user': user,
+            'storage_type': 'Unknown',
+            'bucket_name': 'N/A',
+            'region': 'N/A',
+            'tests': [],
+            'folders': {
                 'count': 0,
                 'list': [],
                 'total_objects': 0,
-                'note': f'{default_storage.__class__.__name__} - folders created automatically'
-            }
-    except Exception as e:
-        diagnostic_info['folders'] = {
-            'error': str(e),
-            'error_type': type(e).__name__,
-            'count': 0,
-            'list': []
+                'note': 'Diagnostic not completed'
+            },
+            'recent_uploads': []
         }
 
-    # Test 5: Recent uploads
-    recent_uploads = ImageUpload.objects.filter(
-        uploaded_at__gte=timezone.now() - timezone.timedelta(hours=24)
-    ).order_by('-uploaded_at')[:5]
+        # Safe storage info
+        try:
+            diagnostic_info['storage_type'] = default_storage.__class__.__name__
+            diagnostic_info['bucket_name'] = getattr(default_storage, 'bucket_name', 'N/A')
+            diagnostic_info['region'] = getattr(default_storage, 'region_name', 'N/A')
+        except:
+            pass
 
-    diagnostic_info['recent_uploads'] = []
-    for upload in recent_uploads:
-        diagnostic_info['recent_uploads'].append({
-            'id': upload.id,
-            'title': upload.title,
-            'filename': upload.image.name if upload.image else 'No file',
-            'size': upload.image.size if upload.image else 0,
-            'uploaded_at': upload.uploaded_at,
-            'url': upload.image.url if upload.image else 'No URL'
-        })
+        # Test 1: Environment variables (safe)
+        try:
+            aws_access_key = getattr(settings, 'AWS_ACCESS_KEY_ID', None)
+            aws_secret_key = getattr(settings, 'AWS_SECRET_ACCESS_KEY', None)
+            bucket_name = getattr(settings, 'AWS_STORAGE_BUCKET_NAME', 'management360')
+            region_name = getattr(settings, 'AWS_S3_REGION_NAME', 'us-east-2')
 
-    context = {
-        'diagnostic_info': diagnostic_info,
-        'title': 'Diagnóstico S3'
-    }
+            diagnostic_info['tests'].append({
+                'name': 'Environment Variables',
+                'status': 'success' if aws_access_key and aws_secret_key else 'error',
+                'details': {
+                    'AWS_ACCESS_KEY_ID': 'Set' if aws_access_key else 'Not set',
+                    'AWS_SECRET_ACCESS_KEY': 'Set' if aws_secret_key else 'Not set',
+                    'AWS_STORAGE_BUCKET_NAME': bucket_name,
+                    'AWS_S3_REGION_NAME': region_name
+                }
+            })
+        except Exception as e:
+            diagnostic_info['tests'].append({
+                'name': 'Environment Variables',
+                'status': 'error',
+                'details': {'error': str(e)}
+            })
 
-    return render(request, 'products/s3_diagnostic.html', context)
+        # Test 2: Storage connectivity (safe)
+        try:
+            if hasattr(default_storage, 'bucket') and default_storage.bucket:
+                if hasattr(default_storage.bucket, 'objects'):
+                    objects = list(default_storage.bucket.objects.limit(5))
+                    diagnostic_info['tests'].append({
+                        'name': 'S3 Connectivity',
+                        'status': 'success',
+                        'details': {
+                            'objects_found': len(objects),
+                            'sample_objects': [obj.key for obj in objects[:3]] if objects else []
+                        }
+                    })
+                else:
+                    diagnostic_info['tests'].append({
+                        'name': 'Storage Type',
+                        'status': 'info',
+                        'details': {'note': 'S3 storage detected but bucket.objects not available'}
+                    })
+            else:
+                diagnostic_info['tests'].append({
+                    'name': 'Storage Type',
+                    'status': 'info',
+                    'details': {
+                        'storage_type': diagnostic_info['storage_type'],
+                        'note': 'Not S3 storage - using local filesystem'
+                    }
+                })
+        except Exception as e:
+            diagnostic_info['tests'].append({
+                'name': 'S3 Connectivity',
+                'status': 'error',
+                'details': {
+                    'error': str(e),
+                    'error_type': type(e).__name__
+                }
+            })
+
+        # Test 3: File upload (safe)
+        try:
+            test_content = b"S3 diagnostic test file"
+            test_filename = f"diagnostic_test_{int(timezone.now().timestamp())}.txt"
+
+            file_obj = ContentFile(test_content)
+            saved_name = default_storage.save(test_filename, file_obj)
+
+            exists = default_storage.exists(saved_name)
+            file_url = 'No URL method'
+            if hasattr(default_storage, 'url'):
+                try:
+                    file_url = default_storage.url(saved_name)
+                except:
+                    file_url = 'URL generation failed'
+
+            # Clean up
+            try:
+                default_storage.delete(saved_name)
+                cleanup_ok = True
+            except:
+                cleanup_ok = False
+
+            diagnostic_info['tests'].append({
+                'name': 'File Upload Test',
+                'status': 'success' if exists else 'warning',
+                'details': {
+                    'file_saved': saved_name,
+                    'file_exists': exists,
+                    'file_url': file_url,
+                    'cleanup_successful': cleanup_ok
+                }
+            })
+        except Exception as e:
+            diagnostic_info['tests'].append({
+                'name': 'File Upload Test',
+                'status': 'error',
+                'details': {
+                    'error': str(e),
+                    'error_type': type(e).__name__
+                }
+            })
+
+        # Test 4: Recent uploads (safe)
+        try:
+            recent_uploads = ImageUpload.objects.filter(
+                uploaded_at__gte=timezone.now() - timezone.timedelta(hours=24)
+            ).order_by('-uploaded_at')[:5]
+
+            diagnostic_info['recent_uploads'] = []
+            for upload in recent_uploads:
+                try:
+                    diagnostic_info['recent_uploads'].append({
+                        'id': upload.id,
+                        'title': upload.title or f'Image {upload.id}',
+                        'filename': upload.image.name if upload.image else 'No file',
+                        'size': upload.image.size if upload.image else 0,
+                        'uploaded_at': upload.uploaded_at,
+                        'url': upload.image.url if upload.image else 'No URL'
+                    })
+                except:
+                    diagnostic_info['recent_uploads'].append({
+                        'id': upload.id,
+                        'title': f'Image {upload.id}',
+                        'filename': 'Error loading file info',
+                        'size': 0,
+                        'uploaded_at': upload.uploaded_at,
+                        'url': 'No URL'
+                    })
+        except Exception as e:
+            diagnostic_info['recent_uploads'] = []
+            diagnostic_info['tests'].append({
+                'name': 'Database Query',
+                'status': 'error',
+                'details': {'error': f'Could not query recent uploads: {str(e)}'}
+            })
+
+        context = {
+            'diagnostic_info': diagnostic_info,
+            'title': 'Diagnóstico S3'
+        }
+
+        return render(request, 'products/s3_diagnostic.html', context)
+
+    except Exception as e:
+        # Ultimate fallback for any unexpected error
+        context = {
+            'diagnostic_info': {
+                'timestamp': timezone.now(),
+                'user': request.user.username if request.user.is_authenticated else 'Anonymous',
+                'error': f'Critical error in diagnostic: {str(e)}',
+                'error_type': type(e).__name__,
+                'tests': [{
+                    'name': 'System Status',
+                    'status': 'error',
+                    'details': {'message': 'Diagnostic system failed to load'}
+                }],
+                'folders': {'count': 0, 'list': [], 'note': 'Diagnostic failed'},
+                'recent_uploads': []
+            },
+            'title': 'Diagnóstico S3 - Error'
+        }
+        return render(request, 'products/s3_diagnostic.html', context)
