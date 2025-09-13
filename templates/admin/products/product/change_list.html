@@ -215,7 +215,7 @@
 }
 
 .loading::after {
-    content: "⏳";
+    content: "Loading...";
     animation: spin 1s linear infinite;
 }
 
@@ -235,13 +235,13 @@
 {% block admin_change_list_object_tools %}
 <div class="object-tools">
     <a href="{% url 'admin:products_product_add' %}" class="addlink">
-        ➕ Agregar Producto
+        [+] Agregar Producto
     </a>
     <a href="{% url 'admin:products_product_changelist' %}?available__exact=0" class="viewlink">
-        📦 Ver No Disponibles
+        [BOX] Ver No Disponibles
     </a>
     <a href="{% url 'admin:products_product_changelist' %}?jewelry_type__exact=ring" class="viewlink">
-        💍 Ver Anillos
+        [RING] Ver Anillos
     </a>
 </div>
 {% endblock %}

@@ -102,8 +102,8 @@ class ProductAdmin(admin.ModelAdmin):
                 </div>
                 '''
             except:
-                return '<span style="color: #dc3545;">⚠️ Error loading image</span>'
-        return '<span style="color: #6c757d;">📷 No image</span>'
+                return '<span style="color: #dc3545;">Error loading image</span>'
+        return '<span style="color: #6c757d;">No image</span>'
     image_preview.short_description = 'Image Preview'
     image_preview.allow_tags = True
 
