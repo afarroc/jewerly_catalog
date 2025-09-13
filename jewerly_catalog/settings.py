@@ -307,6 +307,11 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
         },
+        'image_upload': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
     },
 }
 

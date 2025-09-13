@@ -1,5 +1,5 @@
 from django import forms
-from .models import Category, Product
+from .models import Category, Product, ImageUpload
 
 
 class ProductForm(forms.ModelForm):
@@ -183,3 +183,53 @@ class ProductSearchForm(forms.Form):
             )
 
         return cleaned_data
+
+
+class SimpleImageUploadForm(forms.ModelForm):
+    """Simple form for uploading images only."""
+
+    class Meta:
+        model = ImageUpload
+        fields = ['title', 'image', 'description']
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Título de la imagen (opcional)',
+                'autocomplete': 'off'
+            }),
+            'image': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/*',
+                'required': True
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Descripción opcional de la imagen'
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Make title optional
+        self.fields['title'].required = False
+        self.fields['description'].required = False
+
+        # Add help texts
+        self.fields['image'].help_text = "Formatos permitidos: JPG, PNG, GIF. Tamaño máximo recomendado: 5MB"
+        self.fields['title'].help_text = "Si no se proporciona, se generará automáticamente del nombre del archivo"
+
+    def clean_image(self):
+        """Validate image file."""
+        image = self.cleaned_data.get('image')
+        if image:
+            # Check file size (5MB limit)
+            if image.size > 5 * 1024 * 1024:
+                raise forms.ValidationError("El archivo es demasiado grande. Máximo 5MB.")
+
+            # Check file type
+            allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+            if hasattr(image, 'content_type') and image.content_type not in allowed_types:
+                raise forms.ValidationError("Tipo de archivo no permitido. Use JPG, PNG, GIF o WebP.")
+
+        return image

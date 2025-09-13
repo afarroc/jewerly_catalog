@@ -7,13 +7,21 @@ app_name = 'products'
 urlpatterns = [
     # Template views
     path('', views.product_list, name='product_list'),
-    path('<slug:category_slug>/', views.product_list, name='product_list_by_category'),
     path('<int:id>/<slug:slug>/', views.ProductDetailView.as_view(), name='product_detail'),
 
     # Product management views (require login)
     path('create/', views.product_create, name='product_create'),
     path('<int:product_id>/update/', views.product_update, name='product_update'),
     path('<int:product_id>/delete/', views.product_delete, name='product_delete'),
+
+    # Simple image upload views (require login) - MUST come before category URLs
+    path('images/upload/', views.image_upload, name='image_upload'),
+    path('images/', views.image_list, name='image_list'),
+    path('images/<int:image_id>/', views.image_detail, name='image_detail'),
+    path('images/<int:image_id>/delete/', views.image_delete, name='image_delete'),
+
+    # Category views - MUST come after specific URLs to avoid conflicts
+    path('<slug:category_slug>/', views.product_list, name='product_list_by_category'),
 
     # API views
     path('list/', views.ProductListAPIView.as_view(), name='api_product_list'),

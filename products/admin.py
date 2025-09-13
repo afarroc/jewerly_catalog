@@ -1,7 +1,7 @@
 # products/admin.py
 from django.contrib import admin
 from django.forms import ModelForm
-from .models import Category, Product
+from .models import Category, Product, ImageUpload
 import logging
 
 logger = logging.getLogger(__name__)
@@ -111,5 +111,47 @@ class ProductAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
         logger.info(f"Product '{obj.name}' was {'updated' if change else 'created'} by {request.user}")
 
+class ImageUploadAdmin(admin.ModelAdmin):
+    list_display = ('title', 'image_preview', 'uploaded_at')
+    list_display_links = ('title', 'image_preview')
+    search_fields = ('title', 'description')
+    readonly_fields = ('uploaded_at',)
+    ordering = ('-uploaded_at',)
+
+    fieldsets = (
+        ('Información Básica', {
+            'fields': ('title', 'description')
+        }),
+        ('Imagen', {
+            'fields': ('image',),
+        }),
+        ('Metadata', {
+            'fields': ('uploaded_at',),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def image_preview(self, obj):
+        """Show image preview in list view."""
+        if obj.image:
+            try:
+                return f'''
+                <div style="text-align: center;">
+                    <img src="{obj.image.url}" style="max-height: 50px; max-width: 50px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" />
+                    <br><small style="color: #666;">{obj.title[:20]}...</small>
+                </div>
+                '''
+            except:
+                return '<span style="color: #dc3545;">Error loading image</span>'
+        return '<span style="color: #6c757d;">No image</span>'
+    image_preview.short_description = 'Image Preview'
+    image_preview.allow_tags = True
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        logger.info(f"Image '{obj.title}' was {'updated' if change else 'uploaded'} by {request.user}")
+
+
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Product, ProductAdmin)
+admin.site.register(ImageUpload, ImageUploadAdmin)
