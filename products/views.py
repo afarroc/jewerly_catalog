@@ -543,23 +543,36 @@ def s3_diagnostic(request):
 
     # Test 2: Storage connectivity
     try:
-        # Try to list objects (limited)
-        objects = list(default_storage.bucket.objects.limit(5)) if hasattr(default_storage, 'bucket') else []
-        diagnostic_info['tests'].append({
-            'name': 'S3 Connectivity',
-            'status': 'success',
-            'details': {
-                'objects_found': len(objects),
-                'sample_objects': [obj.key for obj in objects[:3]]
-            }
-        })
+        # Check if it's S3 storage
+        if hasattr(default_storage, 'bucket') and hasattr(default_storage.bucket, 'objects'):
+            # Try to list objects (limited)
+            objects = list(default_storage.bucket.objects.limit(5))
+            diagnostic_info['tests'].append({
+                'name': 'S3 Connectivity',
+                'status': 'success',
+                'details': {
+                    'objects_found': len(objects),
+                    'sample_objects': [obj.key for obj in objects[:3]] if objects else []
+                }
+            })
+        else:
+            # Not S3 storage
+            diagnostic_info['tests'].append({
+                'name': 'Storage Type',
+                'status': 'info',
+                'details': {
+                    'storage_type': default_storage.__class__.__name__,
+                    'note': 'Not S3 storage - using local filesystem'
+                }
+            })
     except Exception as e:
         diagnostic_info['tests'].append({
             'name': 'S3 Connectivity',
             'status': 'error',
             'details': {
                 'error': str(e),
-                'error_type': type(e).__name__
+                'error_type': type(e).__name__,
+                'storage_type': default_storage.__class__.__name__
             }
         })
 
@@ -600,7 +613,7 @@ def s3_diagnostic(request):
 
     # Test 4: Folder structure
     try:
-        if hasattr(default_storage, 'bucket'):
+        if hasattr(default_storage, 'bucket') and hasattr(default_storage.bucket, 'objects'):
             all_objects = list(default_storage.bucket.objects.all().limit(50))
             folders = set()
 
@@ -620,11 +633,12 @@ def s3_diagnostic(request):
                 'count': 0,
                 'list': [],
                 'total_objects': 0,
-                'note': 'Local storage - folders created automatically'
+                'note': f'{default_storage.__class__.__name__} - folders created automatically'
             }
     except Exception as e:
         diagnostic_info['folders'] = {
             'error': str(e),
+            'error_type': type(e).__name__,
             'count': 0,
             'list': []
         }

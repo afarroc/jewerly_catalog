@@ -90,7 +90,21 @@
                     {% if diagnostic_info.folders.error %}
                         <div class="alert alert-danger">
                             <i class="fas fa-exclamation-triangle"></i>
-                            Error al verificar carpetas: {{ diagnostic_info.folders.error }}
+                            <strong>Error al verificar carpetas:</strong> {{ diagnostic_info.folders.error }}
+                            {% if diagnostic_info.folders.error_type %}
+                                <br><small class="text-muted">Tipo: {{ diagnostic_info.folders.error_type }}</small>
+                            {% endif %}
+                        </div>
+                    {% elif diagnostic_info.folders.note %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Nota:</strong> {{ diagnostic_info.folders.note }}
+                        </div>
+                        <div class="text-center">
+                            <div class="alert alert-success py-3">
+                                <h5 class="mb-1">✅ Configuración Correcta</h5>
+                                <small>Las carpetas se crean automáticamente al subir archivos</small>
+                            </div>
                         </div>
                     {% else %}
                         <div class="row">
@@ -126,6 +140,13 @@
                                             </code>
                                         </div>
                                     {% endfor %}
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="mt-3 text-center">
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-folder-open"></i>
+                                    No se encontraron carpetas aún. Se crearán automáticamente cuando subas archivos.
                                 </div>
                             </div>
                         {% endif %}
