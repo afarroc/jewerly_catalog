@@ -82,7 +82,8 @@ class Product(models.Model):
     image = models.ImageField(
         upload_to='products/',
         blank=True,
-        null=True
+        null=True,
+        help_text='Formatos permitidos: JPG, PNG, GIF. Tamaño máximo recomendado: 2MB'
     )
 
     class Meta:
