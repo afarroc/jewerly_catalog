@@ -65,11 +65,11 @@ CSRF_COOKIE_HTTPONLY = True
 # Admin URL (change this for security)
 ADMIN_URL = os.getenv('ADMIN_URL', 'admin/')
 
-# Logging for production
-LOGGING['handlers']['file']['filename'] = '/var/log/django/jewelry_catalog.log'
-LOGGING['handlers']['error_file']['filename'] = '/var/log/django/errors.log'
-LOGGING['handlers']['performance_file']['filename'] = '/var/log/django/performance.log'
-LOGGING['handlers']['security_file']['filename'] = '/var/log/django/security.log'
+# Logging for production - Use project directory for logs
+LOGGING['handlers']['file']['filename'] = os.path.join(BASE_DIR, 'logs', 'django.log')
+LOGGING['handlers']['error_file']['filename'] = os.path.join(BASE_DIR, 'logs', 'errors.log')
+LOGGING['handlers']['performance_file']['filename'] = os.path.join(BASE_DIR, 'logs', 'performance.log')
+LOGGING['handlers']['security_file']['filename'] = os.path.join(BASE_DIR, 'logs', 'security.log')
 
 # Performance monitoring
 MIDDLEWARE.insert(0, 'django.middleware.gzip.GZipMiddleware')
