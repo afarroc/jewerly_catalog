@@ -1,0 +1,292 @@
+{% extends "admin/change_form.html" %}
+{% load static %}
+
+{% block extrahead %}
+<style>
+/* Custom styles for Product admin */
+.product-admin-form {
+    max-width: none;
+}
+
+.field-image {
+    border: 2px dashed #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    background: #f8f9fa;
+    transition: all 0.3s ease;
+}
+
+.field-image:hover {
+    border-color: #0d6efd;
+    background: #e7f3ff;
+}
+
+.field-image img {
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    margin-bottom: 10px;
+}
+
+.field-image .current-image {
+    margin-top: 15px;
+    padding: 10px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+}
+
+.field-image .current-image img {
+    max-width: 150px;
+    max-height: 150px;
+}
+
+.field-price input,
+.field-stock input {
+    font-size: 16px;
+    font-weight: 600;
+    color: #0d6efd;
+}
+
+.field-description textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.form-row {
+    margin-bottom: 20px;
+}
+
+.module h2 {
+    color: #495057;
+    font-weight: 600;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.submit-row {
+    background: #f8f9fa;
+    border-top: 2px solid #dee2e6;
+    padding: 20px;
+    margin: 30px -20px -20px -20px;
+}
+
+.submit-row input[type="submit"] {
+    background: #0d6efd;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.submit-row input[type="submit"]:hover {
+    background: #0b5ed7;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .field-image {
+        padding: 15px;
+    }
+
+    .field-image img {
+        max-width: 150px;
+        max-height: 150px;
+    }
+
+    .submit-row input[type="submit"] {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+}
+
+/* Loading animation for image uploads */
+.image-uploading {
+    position: relative;
+}
+
+.image-uploading::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+
+.image-uploading::before {
+    content: "⏳ Subiendo imagen...";
+    background: #0d6efd;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    z-index: 10;
+}
+
+/* Success message styling */
+.alert-success {
+    background: #d1edff;
+    border: 1px solid #0d6efd;
+    color: #0d6efd;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+
+/* Error message styling */
+.alert-error {
+    background: #f8d7da;
+    border: 1px solid #dc3545;
+    color: #721c24;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="product-admin-form">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {{ block.super }}
+</div>
+{% endblock %}
+
+{% block admin_change_form_document_ready %}
+<script>
+// Custom JavaScript for enhanced admin experience
+document.addEventListener('DOMContentLoaded', function() {
+    // Image preview functionality
+    const imageInput = document.querySelector('#id_image');
+    const imageField = document.querySelector('.field-image');
+
+    if (imageInput && imageField) {
+        // Create preview container if it doesn't exist
+        let previewContainer = imageField.querySelector('.current-image');
+        if (!previewContainer) {
+            previewContainer = document.createElement('div');
+            previewContainer.className = 'current-image';
+            imageField.appendChild(previewContainer);
+        }
+
+        // Handle file selection
+        imageInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Show loading state
+                imageField.classList.add('image-uploading');
+
+                // Validate file type
+                const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                if (!validTypes.includes(file.type)) {
+                    alert('Por favor selecciona una imagen válida (JPG, PNG, GIF)');
+                    e.target.value = '';
+                    imageField.classList.remove('image-uploading');
+                    return;
+                }
+
+                // Validate file size (5MB max)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('La imagen es demasiado grande. Máximo 5MB permitido.');
+                    e.target.value = '';
+                    imageField.classList.remove('image-uploading');
+                    return;
+                }
+
+                // Create preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewContainer.innerHTML = `
+                        <p><strong>Imagen seleccionada:</strong></p>
+                        <img src="${e.target.result}" alt="Preview" style="max-width: 200px; max-height: 200px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                        <p><small>${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)</small></p>
+                    `;
+                    imageField.classList.remove('image-uploading');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // Enhanced form validation
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const priceField = document.querySelector('#id_price');
+            const stockField = document.querySelector('#id_stock');
+
+            // Validate price
+            if (priceField && parseFloat(priceField.value) <= 0) {
+                alert('El precio debe ser mayor a cero.');
+                e.preventDefault();
+                priceField.focus();
+                return false;
+            }
+
+            // Validate stock
+            if (stockField && parseInt(stockField.value) < 0) {
+                alert('El stock no puede ser negativo.');
+                e.preventDefault();
+                stockField.focus();
+                return false;
+            }
+
+            // Show loading state
+            const submitBtn = document.querySelector('input[type="submit"]');
+            if (submitBtn) {
+                submitBtn.value = 'Guardando...';
+                submitBtn.disabled = true;
+            }
+        });
+    }
+
+    // Auto-generate slug from name
+    const nameField = document.querySelector('#id_name');
+    const slugField = document.querySelector('#id_slug');
+
+    if (nameField && slugField) {
+        nameField.addEventListener('input', function() {
+            const slug = this.value
+                .toLowerCase()
+                .replace(/[^a-z0-9\s-]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .trim('-');
+            slugField.value = slug;
+        });
+    }
+
+    // Enhanced number inputs
+    const numberInputs = document.querySelectorAll('input[type="number"]');
+    numberInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            if (this.value < 0) {
+                this.style.borderColor = '#dc3545';
+            } else {
+                this.style.borderColor = '#28a745';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
