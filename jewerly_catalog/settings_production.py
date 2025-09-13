@@ -120,21 +120,44 @@ AWS_S3_FILE_OVERWRITE = False
 AWS_S3_VERIFY = True
 
 # Use S3 for media files (only if credentials are available)
+print(f"[S3] === S3 CONFIGURATION CHECK ===")
+print(f"[S3] AWS_ACCESS_KEY_ID: '{AWS_ACCESS_KEY_ID}' (length: {len(AWS_ACCESS_KEY_ID) if AWS_ACCESS_KEY_ID else 0})")
+print(f"[S3] AWS_SECRET_ACCESS_KEY: '{'***' + AWS_SECRET_ACCESS_KEY[-4:] if AWS_SECRET_ACCESS_KEY else 'None'}' (length: {len(AWS_SECRET_ACCESS_KEY) if AWS_SECRET_ACCESS_KEY else 0})")
+print(f"[S3] AWS_STORAGE_BUCKET_NAME: '{AWS_STORAGE_BUCKET_NAME}'")
+print(f"[S3] AWS_S3_REGION_NAME: '{AWS_S3_REGION_NAME}'")
+
 if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and AWS_STORAGE_BUCKET_NAME:
-    print(f"[S3] Configuring S3 storage with bucket: {AWS_STORAGE_BUCKET_NAME}")
-    print(f"[S3] AWS_ACCESS_KEY_ID configured: {'Yes' if AWS_ACCESS_KEY_ID else 'No'}")
-    print(f"[S3] AWS_SECRET_ACCESS_KEY configured: {'Yes' if AWS_SECRET_ACCESS_KEY else 'No'}")
+    print(f"[S3] ✅ All credentials present - configuring S3 storage")
+    print(f"[S3] Bucket: {AWS_STORAGE_BUCKET_NAME}")
+    print(f"[S3] Region: {AWS_S3_REGION_NAME}")
+    print(f"[S3] Custom domain: {AWS_S3_CUSTOM_DOMAIN}")
 
     # Use standard S3 storage (compatible with django-storages 1.14.4)
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
     MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
+    print(f"[S3] ✅ S3 storage configured successfully")
+    print(f"[S3] Media URL: {MEDIA_URL}")
 
 else:
-    print("[S3] S3 credentials not found, using local storage")
+    print(f"[S3] ❌ S3 credentials incomplete - using local storage fallback")
+    if not AWS_ACCESS_KEY_ID:
+        print(f"[S3] ❌ AWS_ACCESS_KEY_ID is missing or empty")
+    if not AWS_SECRET_ACCESS_KEY:
+        print(f"[S3] ❌ AWS_SECRET_ACCESS_KEY is missing or empty")
+    if not AWS_STORAGE_BUCKET_NAME:
+        print(f"[S3] ❌ AWS_STORAGE_BUCKET_NAME is missing or empty")
+
     # Fallback to local storage if S3 is not configured
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
     MEDIA_URL = '/media/'
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+    print(f"[S3] ✅ Local storage configured as fallback")
+    print(f"[S3] Media URL: {MEDIA_URL}")
+    print(f"[S3] Media Root: {MEDIA_ROOT}")
+
+print(f"[S3] Final DEFAULT_FILE_STORAGE: {DEFAULT_FILE_STORAGE}")
+print(f"[S3] Final MEDIA_URL: {MEDIA_URL}")
+print(f"[S3] === END S3 CONFIGURATION ===")
 
 # Optional: Configure static files on S3 (if needed)
 # STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
