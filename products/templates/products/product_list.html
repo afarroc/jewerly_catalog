@@ -38,20 +38,31 @@
 
             <!-- Header -->
             <div class="mb-4">
-                <h1 class="display-5 text-primary mb-2">
-                    {% if category %}
-                        <i class="fas fa-gem me-3"></i>{{ category.name }}
-                    {% else %}
-                        <i class="fas fa-store me-3"></i>All Products
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h1 class="display-5 text-primary mb-2">
+                            {% if category %}
+                                <i class="fas fa-gem me-3"></i>{{ category.name }}
+                            {% else %}
+                                <i class="fas fa-store me-3"></i>All Products
+                            {% endif %}
+                        </h1>
+                        <p class="lead text-muted mb-0">
+                            {% if category %}
+                                Discover our beautiful {{ category.name|lower }} collection
+                            {% else %}
+                                Explore our complete collection of handcrafted jewelry
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% if user.is_authenticated %}
+                    <div>
+                        <a href="{% url 'products:product_create' %}" class="btn btn-success btn-lg">
+                            <i class="fas fa-plus me-2"></i>Crear Producto
+                        </a>
+                    </div>
                     {% endif %}
-                </h1>
-                <p class="lead text-muted mb-4">
-                    {% if category %}
-                        Discover our beautiful {{ category.name|lower }} collection
-                    {% else %}
-                        Explore our complete collection of handcrafted jewelry
-                    {% endif %}
-                </p>
+                </div>
             </div>
 
             <!-- Search and Filters -->

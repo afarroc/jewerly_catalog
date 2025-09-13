@@ -2,6 +2,80 @@ from django import forms
 from .models import Category, Product
 
 
+class ProductForm(forms.ModelForm):
+    """Form for creating and editing products with image upload."""
+
+    class Meta:
+        model = Product
+        fields = [
+            'name', 'description', 'price', 'jewelry_type', 'material',
+            'category', 'stock', 'available', 'image'
+        ]
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Nombre del producto'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Descripción detallada del producto'
+            }),
+            'price': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'step': '0.01',
+                'min': '0.01',
+                'placeholder': '0.00'
+            }),
+            'jewelry_type': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+            'material': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+            'category': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+            'stock': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '0',
+                'placeholder': '0'
+            }),
+            'available': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            }),
+            'image': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/*'
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Add CSS classes to category field
+        self.fields['category'].empty_label = "Seleccionar categoría"
+        self.fields['category'].required = False
+
+        # Add help texts
+        self.fields['image'].help_text = "Formatos permitidos: JPG, PNG, GIF. Tamaño máximo recomendado: 2MB"
+        self.fields['price'].help_text = "Precio en soles peruanos (S/.)"
+        self.fields['stock'].help_text = "Cantidad disponible en inventario"
+
+    def clean_price(self):
+        """Validate price is positive."""
+        price = self.cleaned_data.get('price')
+        if price and price <= 0:
+            raise forms.ValidationError("El precio debe ser mayor a cero.")
+        return price
+
+    def clean_stock(self):
+        """Validate stock is not negative."""
+        stock = self.cleaned_data.get('stock')
+        if stock is not None and stock < 0:
+            raise forms.ValidationError("El stock no puede ser negativo.")
+        return stock
+
+
 class ProductSearchForm(forms.Form):
     """Form for advanced product search and filtering."""
 

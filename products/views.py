@@ -1,10 +1,13 @@
 # products/views.py
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView
 from django.db.models import Q
 from django.views.decorators.cache import cache_page
 from django.core.cache import cache
 from django.utils.decorators import method_decorator
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.urls import reverse
 from rest_framework import generics, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -13,7 +16,7 @@ from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from .models import Category, Product
-from .forms import ProductSearchForm
+from .forms import ProductSearchForm, ProductForm
 from .serializers import (
     CategorySerializer, ProductSerializer,
     ProductListSerializer
@@ -170,3 +173,68 @@ def products_by_category_api(request, category_slug):
             {'error': 'Category not found'},
             status=status.HTTP_404_NOT_FOUND
         )
+
+
+# Product Management Views (for admin/staff)
+@login_required
+def product_create(request):
+    """View for creating new products with image upload."""
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES)
+        if form.is_valid():
+            product = form.save()
+            messages.success(request, f'Producto "{product.name}" creado exitosamente.')
+            logger.info(f"Product created: {product.name} by user {request.user.username}")
+            return redirect('product_detail', id=product.id, slug=product.slug)
+    else:
+        form = ProductForm()
+
+    context = {
+        'form': form,
+        'title': 'Crear Nuevo Producto',
+        'button_text': 'Crear Producto'
+    }
+    return render(request, 'products/product_form.html', context)
+
+
+@login_required
+def product_update(request, product_id):
+    """View for updating existing products with image upload."""
+    product = get_object_or_404(Product, id=product_id)
+
+    if request.method == 'POST':
+        form = ProductForm(request.POST, request.FILES, instance=product)
+        if form.is_valid():
+            product = form.save()
+            messages.success(request, f'Producto "{product.name}" actualizado exitosamente.')
+            logger.info(f"Product updated: {product.name} by user {request.user.username}")
+            return redirect('product_detail', id=product.id, slug=product.slug)
+    else:
+        form = ProductForm(instance=product)
+
+    context = {
+        'form': form,
+        'product': product,
+        'title': f'Editar Producto: {product.name}',
+        'button_text': 'Actualizar Producto'
+    }
+    return render(request, 'products/product_form.html', context)
+
+
+@login_required
+def product_delete(request, product_id):
+    """View for deleting products."""
+    product = get_object_or_404(Product, id=product_id)
+
+    if request.method == 'POST':
+        product_name = product.name
+        product.delete()
+        messages.success(request, f'Producto "{product_name}" eliminado exitosamente.')
+        logger.info(f"Product deleted: {product_name} by user {request.user.username}")
+        return redirect('product_list')
+
+    context = {
+        'product': product,
+        'title': f'Eliminar Producto: {product.name}'
+    }
+    return render(request, 'products/product_confirm_delete.html', context)

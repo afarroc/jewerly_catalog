@@ -10,6 +10,11 @@ urlpatterns = [
     path('<slug:category_slug>/', views.product_list, name='product_list_by_category'),
     path('<int:id>/<slug:slug>/', views.ProductDetailView.as_view(), name='product_detail'),
 
+    # Product management views (require login)
+    path('create/', views.product_create, name='product_create'),
+    path('<int:product_id>/update/', views.product_update, name='product_update'),
+    path('<int:product_id>/delete/', views.product_delete, name='product_delete'),
+
     # API views
     path('list/', views.ProductListAPIView.as_view(), name='api_product_list'),
     path('detail/<slug:slug>/', views.ProductDetailAPIView.as_view(), name='api_product_detail'),
