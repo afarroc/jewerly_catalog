@@ -22,7 +22,7 @@ mkdir -p staticfiles media logs
 
 # Configurar variables de entorno
 echo "Configurando variables de entorno..."
-export DJANGO_SETTINGS_MODULE=jewerly_catalog.settings
+export DJANGO_SETTINGS_MODULE=jewerly_catalog.settings_production
 export PYTHONPATH=$PYTHONPATH:$(pwd)
 
 # Verificar configuración de Django
