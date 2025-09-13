@@ -282,23 +282,37 @@ def image_upload(request):
     user = request.user.username or 'Anonymous'
 
     if request.method == 'POST':
+        image_logger.info(f"[UPLOAD] === STARTING IMAGE UPLOAD ===")
         image_logger.info(f"[UPLOAD] POST request to image_upload by user: {user}")
+        image_logger.info(f"[UPLOAD] Request timestamp: {timezone.now()}")
+        image_logger.info(f"[UPLOAD] Remote IP: {request.META.get('REMOTE_ADDR', 'Unknown')}")
+        image_logger.info(f"[UPLOAD] User agent: {request.META.get('HTTP_USER_AGENT', 'Unknown')}")
 
         # Log file information
         if request.FILES:
+            image_logger.info(f"[UPLOAD] Files received: {len(request.FILES)} file(s)")
             for field_name, uploaded_file in request.FILES.items():
-                image_logger.info(f"[UPLOAD] File received: {field_name} = {uploaded_file.name} ({uploaded_file.size} bytes), Content-Type: {uploaded_file.content_type}")
+                image_logger.info(f"[UPLOAD] File details:")
+                image_logger.info(f"[UPLOAD]   Field: {field_name}")
+                image_logger.info(f"[UPLOAD]   Name: {uploaded_file.name}")
+                image_logger.info(f"[UPLOAD]   Size: {uploaded_file.size} bytes")
+                image_logger.info(f"[UPLOAD]   Content-Type: {uploaded_file.content_type}")
+                image_logger.info(f"[UPLOAD]   Temporary file: {hasattr(uploaded_file, 'temporary_file_path')}")
         else:
             image_logger.warning(f"[UPLOAD] No files received in POST request")
+            image_logger.warning(f"[UPLOAD] POST data keys: {list(request.POST.keys()) if request.POST else 'None'}")
 
         form = SimpleImageUploadForm(request.POST, request.FILES)
 
         if form.is_valid():
             try:
-                image_logger.info(f"[UPLOAD] Form is valid, attempting to save...")
+                image_logger.info(f"[UPLOAD] Form validation passed, preparing to save...")
+                image_logger.info(f"[UPLOAD] Form cleaned data: {dict(form.cleaned_data)}")
 
                 # Save the form
+                image_logger.info(f"[UPLOAD] Calling form.save()...")
                 image_upload = form.save()
+                image_logger.info(f"[UPLOAD] Model instance created with ID: {image_upload.id}")
 
                 # Check if image was actually saved
                 if image_upload.image:
@@ -306,27 +320,52 @@ def image_upload(request):
                     file_name = image_upload.image.name
                     file_url = image_upload.image.url if hasattr(image_upload.image, 'url') else 'No URL'
 
-                    image_logger.info(f"[SUCCESS] Image uploaded successfully: ID={image_upload.id}, Title='{image_upload.title}', File='{file_name}', Size={file_size} bytes, URL='{file_url}', User={user}")
+                    image_logger.info(f"[SUCCESS] === IMAGE UPLOAD COMPLETED SUCCESSFULLY ===")
+                    image_logger.info(f"[SUCCESS] Image ID: {image_upload.id}")
+                    image_logger.info(f"[SUCCESS] Title: '{image_upload.title}'")
+                    image_logger.info(f"[SUCCESS] File name: '{file_name}'")
+                    image_logger.info(f"[SUCCESS] File size: {file_size} bytes")
+                    image_logger.info(f"[SUCCESS] File URL: '{file_url}'")
+                    image_logger.info(f"[SUCCESS] Upload timestamp: {image_upload.uploaded_at}")
+                    image_logger.info(f"[SUCCESS] User: {user}")
+                    image_logger.info(f"[SUCCESS] Storage type: {type(image_upload.image.storage).__name__}")
 
                     # Verify file exists in storage
                     try:
                         storage = image_upload.image.storage
                         exists = storage.exists(file_name)
-                        image_logger.info(f"[STORAGE] File exists in storage: {exists}")
+                        image_logger.info(f"[STORAGE] File verification: exists={exists}")
+
+                        # Additional storage info
+                        if hasattr(storage, 'bucket_name'):
+                            image_logger.info(f"[STORAGE] Bucket: {storage.bucket_name}")
+                        if hasattr(storage, 'region_name'):
+                            image_logger.info(f"[STORAGE] Region: {storage.region_name}")
+
                     except Exception as storage_check_error:
                         image_logger.warning(f"[STORAGE] Could not verify file existence: {str(storage_check_error)}")
 
                     messages.success(request, f'Imagen "{image_upload.title}" subida exitosamente.')
+                    image_logger.info(f"[REDIRECT] Redirecting to image list for user: {user}")
                     return redirect('products:image_list')
                 else:
-                    image_logger.error(f"[ERROR] Image saved but no image file found in model")
+                    image_logger.error(f"[ERROR] Image model saved but no image file found in model")
+                    image_logger.error(f"[ERROR] This indicates a problem with the ImageField configuration")
                     messages.error(request, 'Error: La imagen no se guardó correctamente.')
 
             except Exception as e:
-                image_logger.error(f"[ERROR] Error saving image upload: {str(e)}, User={user}")
+                image_logger.error(f"[ERROR] === CRITICAL ERROR DURING IMAGE SAVE ===")
+                image_logger.error(f"[ERROR] Error saving image upload: {str(e)}")
                 image_logger.error(f"[ERROR] Exception type: {type(e).__name__}")
+                image_logger.error(f"[ERROR] User: {user}")
+                image_logger.error(f"[ERROR] Form data: {dict(form.cleaned_data) if form.is_valid() else 'Form invalid'}")
+
                 import traceback
-                image_logger.error(f"[ERROR] Traceback: {traceback.format_exc()}")
+                image_logger.error(f"[ERROR] Full traceback:")
+                for line in traceback.format_exc().split('\n'):
+                    if line.strip():
+                        image_logger.error(f"[ERROR] {line}")
+
                 messages.error(request, 'Error al guardar la imagen. Intente nuevamente.')
         else:
             image_logger.warning(f"[WARNING] Invalid form submission in image_upload: {form.errors}, User={user}")
@@ -355,11 +394,16 @@ def image_list(request):
     search_query = request.GET.get('q', '').strip()
     page = request.GET.get('page', '1')
 
-    image_logger.info(f"[LIST] GET request to image_list by user: {user}, Page: {page}, Search: '{search_query}'")
+    image_logger.info(f"[LIST] === STARTING IMAGE LIST REQUEST ===")
+    image_logger.info(f"[LIST] GET request to image_list by user: {user}")
+    image_logger.info(f"[LIST] Page: {page}, Search: '{search_query}'")
+    image_logger.info(f"[LIST] Request timestamp: {start_time}")
+    image_logger.info(f"[LIST] Remote IP: {request.META.get('REMOTE_ADDR', 'Unknown')}")
 
     # Base queryset
     images = ImageUpload.objects.all()
     total_before_filter = images.count()
+    image_logger.info(f"[LIST] Total images in database: {total_before_filter}")
 
     # Apply search filter if query exists
     if search_query:
@@ -367,7 +411,8 @@ def image_list(request):
             Q(title__icontains=search_query) |
             Q(description__icontains=search_query)
         )
-        image_logger.info(f"[SEARCH] Search applied: '{search_query}' - Found {images.count()} of {total_before_filter} images")
+        image_logger.info(f"[SEARCH] Search applied: '{search_query}'")
+        image_logger.info(f"[SEARCH] Results: {images.count()} of {total_before_filter} images found")
 
     # Order by upload date (newest first)
     images = images.order_by('-uploaded_at')
@@ -395,7 +440,16 @@ def image_list(request):
     # Performance logging
     end_time = timezone.now()
     duration = (end_time - start_time).total_seconds() * 1000  # milliseconds
-    image_logger.info(f"[PERF] Image list rendered in {duration:.2f}ms - Total: {total_images}, Recent: {recent_uploads}, Page: {images_page.number}/{paginator.num_pages}")
+
+    image_logger.info(f"[PERF] === IMAGE LIST RENDERED SUCCESSFULLY ===")
+    image_logger.info(f"[PERF] Execution time: {duration:.2f}ms")
+    image_logger.info(f"[PERF] Total images in DB: {total_images}")
+    image_logger.info(f"[PERF] Recent uploads (7 days): {recent_uploads}")
+    image_logger.info(f"[PERF] Images on current page: {images_page.object_list.count()}")
+    image_logger.info(f"[PERF] Page: {images_page.number}/{paginator.num_pages}")
+    image_logger.info(f"[PERF] Search query: '{search_query}'")
+    image_logger.info(f"[PERF] User: {user}")
+    image_logger.info(f"[PERF] Response: 200 OK")
 
     context = {
         'images': images_page,
@@ -515,6 +569,11 @@ def s3_diagnostic(request):
     """Diagnostic view for S3 configuration and connectivity"""
     try:
         user = request.user.username or 'Anonymous'
+        start_time = timezone.now()
+
+        image_logger.info(f"[S3_DIAGNOSTIC] Starting diagnostic for user: {user}")
+        image_logger.info(f"[S3_DIAGNOSTIC] Request timestamp: {start_time}")
+        image_logger.info(f"[S3_DIAGNOSTIC] User agent: {request.META.get('HTTP_USER_AGENT', 'Unknown')}")
 
         # Basic info
         diagnostic_info = {
@@ -538,19 +597,33 @@ def s3_diagnostic(request):
             diagnostic_info['storage_type'] = default_storage.__class__.__name__
             diagnostic_info['bucket_name'] = getattr(default_storage, 'bucket_name', 'N/A')
             diagnostic_info['region'] = getattr(default_storage, 'region_name', 'N/A')
-        except:
+
+            image_logger.info(f"[S3_DIAGNOSTIC] Storage type: {diagnostic_info['storage_type']}")
+            image_logger.info(f"[S3_DIAGNOSTIC] Bucket name: {diagnostic_info['bucket_name']}")
+            image_logger.info(f"[S3_DIAGNOSTIC] Region: {diagnostic_info['region']}")
+        except Exception as e:
+            image_logger.warning(f"[S3_DIAGNOSTIC] Could not get storage info: {str(e)}")
             pass
 
         # Test 1: Environment variables (safe)
+        image_logger.info("[S3_DIAGNOSTIC] === TEST 1: Environment Variables ===")
         try:
             aws_access_key = getattr(settings, 'AWS_ACCESS_KEY_ID', None)
             aws_secret_key = getattr(settings, 'AWS_SECRET_ACCESS_KEY', None)
             bucket_name = getattr(settings, 'AWS_STORAGE_BUCKET_NAME', 'management360')
             region_name = getattr(settings, 'AWS_S3_REGION_NAME', 'us-east-2')
 
+            env_status = 'success' if aws_access_key and aws_secret_key else 'error'
+
+            image_logger.info(f"[S3_DIAGNOSTIC] AWS_ACCESS_KEY_ID: {'✓ Set' if aws_access_key else '✗ Not set'}")
+            image_logger.info(f"[S3_DIAGNOSTIC] AWS_SECRET_ACCESS_KEY: {'✓ Set' if aws_secret_key else '✗ Not set'}")
+            image_logger.info(f"[S3_DIAGNOSTIC] AWS_STORAGE_BUCKET_NAME: {bucket_name}")
+            image_logger.info(f"[S3_DIAGNOSTIC] AWS_S3_REGION_NAME: {region_name}")
+            image_logger.info(f"[S3_DIAGNOSTIC] Environment test result: {env_status}")
+
             diagnostic_info['tests'].append({
                 'name': 'Environment Variables',
-                'status': 'success' if aws_access_key and aws_secret_key else 'error',
+                'status': env_status,
                 'details': {
                     'AWS_ACCESS_KEY_ID': 'Set' if aws_access_key else 'Not set',
                     'AWS_SECRET_ACCESS_KEY': 'Set' if aws_secret_key else 'Not set',
@@ -559,6 +632,7 @@ def s3_diagnostic(request):
                 }
             })
         except Exception as e:
+            image_logger.error(f"[S3_DIAGNOSTIC] Environment variables test failed: {str(e)}")
             diagnostic_info['tests'].append({
                 'name': 'Environment Variables',
                 'status': 'error',
@@ -566,10 +640,20 @@ def s3_diagnostic(request):
             })
 
         # Test 2: Storage connectivity (safe)
+        image_logger.info("[S3_DIAGNOSTIC] === TEST 2: Storage Connectivity ===")
         try:
             if hasattr(default_storage, 'bucket') and default_storage.bucket:
+                image_logger.info("[S3_DIAGNOSTIC] S3 bucket detected")
                 if hasattr(default_storage.bucket, 'objects'):
+                    image_logger.info("[S3_DIAGNOSTIC] Bucket.objects available, attempting to list objects...")
                     objects = list(default_storage.bucket.objects.limit(5))
+                    image_logger.info(f"[S3_DIAGNOSTIC] Found {len(objects)} objects in bucket")
+
+                    if objects:
+                        image_logger.info("[S3_DIAGNOSTIC] Sample objects:")
+                        for i, obj in enumerate(objects[:3]):
+                            image_logger.info(f"[S3_DIAGNOSTIC]   {i+1}. {obj.key} ({obj.size} bytes)")
+
                     diagnostic_info['tests'].append({
                         'name': 'S3 Connectivity',
                         'status': 'success',
@@ -579,12 +663,14 @@ def s3_diagnostic(request):
                         }
                     })
                 else:
+                    image_logger.warning("[S3_DIAGNOSTIC] S3 storage detected but bucket.objects not available")
                     diagnostic_info['tests'].append({
                         'name': 'Storage Type',
                         'status': 'info',
                         'details': {'note': 'S3 storage detected but bucket.objects not available'}
                     })
             else:
+                image_logger.info(f"[S3_DIAGNOSTIC] Not S3 storage - using {diagnostic_info['storage_type']}")
                 diagnostic_info['tests'].append({
                     'name': 'Storage Type',
                     'status': 'info',
@@ -594,6 +680,8 @@ def s3_diagnostic(request):
                     }
                 })
         except Exception as e:
+            image_logger.error(f"[S3_DIAGNOSTIC] Storage connectivity test failed: {str(e)}")
+            image_logger.error(f"[S3_DIAGNOSTIC] Error type: {type(e).__name__}")
             diagnostic_info['tests'].append({
                 'name': 'S3 Connectivity',
                 'status': 'error',
@@ -604,31 +692,49 @@ def s3_diagnostic(request):
             })
 
         # Test 3: File upload (safe)
+        image_logger.info("[S3_DIAGNOSTIC] === TEST 3: File Upload Test ===")
         try:
             test_content = b"S3 diagnostic test file"
             test_filename = f"diagnostic_test_{int(timezone.now().timestamp())}.txt"
 
+            image_logger.info(f"[S3_DIAGNOSTIC] Creating test file: {test_filename}")
+            image_logger.info(f"[S3_DIAGNOSTIC] File content size: {len(test_content)} bytes")
+
             file_obj = ContentFile(test_content)
+            image_logger.info("[S3_DIAGNOSTIC] ContentFile created, attempting to save...")
+
             saved_name = default_storage.save(test_filename, file_obj)
+            image_logger.info(f"[S3_DIAGNOSTIC] File saved as: {saved_name}")
 
             exists = default_storage.exists(saved_name)
+            image_logger.info(f"[S3_DIAGNOSTIC] File exists check: {exists}")
+
             file_url = 'No URL method'
             if hasattr(default_storage, 'url'):
                 try:
                     file_url = default_storage.url(saved_name)
-                except:
+                    image_logger.info(f"[S3_DIAGNOSTIC] Generated URL: {file_url}")
+                except Exception as url_error:
                     file_url = 'URL generation failed'
+                    image_logger.warning(f"[S3_DIAGNOSTIC] URL generation failed: {str(url_error)}")
+            else:
+                image_logger.info("[S3_DIAGNOSTIC] Storage does not have URL method")
 
             # Clean up
+            cleanup_ok = False
             try:
                 default_storage.delete(saved_name)
                 cleanup_ok = True
-            except:
-                cleanup_ok = False
+                image_logger.info("[S3_DIAGNOSTIC] Test file cleanup successful")
+            except Exception as cleanup_error:
+                image_logger.warning(f"[S3_DIAGNOSTIC] Test file cleanup failed: {str(cleanup_error)}")
+
+            upload_status = 'success' if exists else 'warning'
+            image_logger.info(f"[S3_DIAGNOSTIC] File upload test result: {upload_status}")
 
             diagnostic_info['tests'].append({
                 'name': 'File Upload Test',
-                'status': 'success' if exists else 'warning',
+                'status': upload_status,
                 'details': {
                     'file_saved': saved_name,
                     'file_exists': exists,
@@ -637,6 +743,11 @@ def s3_diagnostic(request):
                 }
             })
         except Exception as e:
+            image_logger.error(f"[S3_DIAGNOSTIC] File upload test failed: {str(e)}")
+            image_logger.error(f"[S3_DIAGNOSTIC] Error type: {type(e).__name__}")
+            import traceback
+            image_logger.error(f"[S3_DIAGNOSTIC] Traceback: {traceback.format_exc()}")
+
             diagnostic_info['tests'].append({
                 'name': 'File Upload Test',
                 'status': 'error',
@@ -680,6 +791,26 @@ def s3_diagnostic(request):
                 'details': {'error': f'Could not query recent uploads: {str(e)}'}
             })
 
+        # Calculate execution time
+        end_time = timezone.now()
+        execution_time = (end_time - start_time).total_seconds() * 1000  # milliseconds
+
+        # Count test results
+        test_counts = {'success': 0, 'error': 0, 'warning': 0, 'info': 0}
+        for test in diagnostic_info['tests']:
+            status = test.get('status', 'unknown')
+            if status in test_counts:
+                test_counts[status] += 1
+
+        # Log summary
+        image_logger.info("[S3_DIAGNOSTIC] === DIAGNOSTIC SUMMARY ===")
+        image_logger.info(f"[S3_DIAGNOSTIC] Execution time: {execution_time:.2f}ms")
+        image_logger.info(f"[S3_DIAGNOSTIC] Tests run: {len(diagnostic_info['tests'])}")
+        image_logger.info(f"[S3_DIAGNOSTIC] Results: {test_counts['success']} success, {test_counts['error']} errors, {test_counts['warning']} warnings, {test_counts['info']} info")
+        image_logger.info(f"[S3_DIAGNOSTIC] Recent uploads found: {len(diagnostic_info['recent_uploads'])}")
+        image_logger.info(f"[S3_DIAGNOSTIC] Folders detected: {diagnostic_info['folders']['count']}")
+        image_logger.info("[S3_DIAGNOSTIC] === END DIAGNOSTIC ===")
+
         context = {
             'diagnostic_info': diagnostic_info,
             'title': 'Diagnóstico S3'
@@ -689,9 +820,15 @@ def s3_diagnostic(request):
 
     except Exception as e:
         # Ultimate fallback for any unexpected error
+        error_time = timezone.now()
+        image_logger.critical(f"[S3_DIAGNOSTIC] CRITICAL ERROR at {error_time}: {str(e)}")
+        image_logger.critical(f"[S3_DIAGNOSTIC] Error type: {type(e).__name__}")
+        import traceback
+        image_logger.critical(f"[S3_DIAGNOSTIC] Full traceback: {traceback.format_exc()}")
+
         context = {
             'diagnostic_info': {
-                'timestamp': timezone.now(),
+                'timestamp': error_time,
                 'user': request.user.username if request.user.is_authenticated else 'Anonymous',
                 'error': f'Critical error in diagnostic: {str(e)}',
                 'error_type': type(e).__name__,
