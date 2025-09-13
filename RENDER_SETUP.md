@@ -82,21 +82,101 @@ render logs --app jewerly-catalog-kpoy
 
 ## 🐛 Troubleshooting
 
-### Si Sigue Usando Local Storage:
-1. **Verifica las variables:**
+### ❌ **Problema Detectado: Política IAM Vacía**
+
+La política del grupo de usuario IAM está **completamente vacía**:
+```json
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "Statement1",
+			"Effect": "Allow",
+			"Action": [],      // <- VACÍO
+			"Resource": []     // <- VACÍO
+		}
+	]
+}
+```
+
+### ✅ **Solución: Actualizar Política IAM**
+
+#### **Paso 1: Ir a AWS IAM Console**
+1. Ve a [console.aws.amazon.com/iam](https://console.aws.amazon.com/iam)
+2. Ve a **"Groups"**
+3. Selecciona el grupo del usuario
+4. Ve a **"Permissions"** → **"Inline policies"**
+5. Edita o crea una nueva política inline
+
+#### **Paso 2: Política Correcta para S3**
+Reemplaza la política vacía con esta:
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:DeleteObject",
+                "s3:ListBucket"
+            ],
+            "Resource": [
+                "arn:aws:s3:::management360",
+                "arn:aws:s3:::management360/*"
+            ]
+        }
+    ]
+}
+```
+
+#### **Paso 3: Verificar en AWS**
+Después de actualizar la política:
+1. Ve a **"Users"** → selecciona tu usuario
+2. Ve a **"Permissions"**
+3. Deberías ver los permisos S3 listados
+
+### 🔄 **Después de Corregir IAM**
+
+1. **Configura variables en Render** (como indiqué antes)
+2. **Redeploy** el servicio
+3. **Verifica** que aparezca en logs:
+   ```
+   [S3] ✅ All credentials present - configuring S3 storage
+   [S3] ✅ S3 storage configured successfully
+   ```
+
+### 📋 **Verificación de Permisos IAM**
+
+#### **Permisos Requeridos:**
+- ✅ `s3:GetObject` - Leer archivos
+- ✅ `s3:PutObject` - Subir archivos
+- ✅ `s3:DeleteObject` - Eliminar archivos
+- ✅ `s3:ListBucket` - Listar contenido del bucket
+
+#### **Recursos Específicos:**
+- ✅ `arn:aws:s3:::management360` - El bucket
+- ✅ `arn:aws:s3:::management360/*` - Todos los archivos dentro del bucket
+
+### 🚨 **Si Sigue Sin Funcionar:**
+
+1. **Verifica que la política se aplicó:**
    ```bash
-   python test_env.py
+   # En AWS CLI (si lo tienes instalado)
+   aws sts get-caller-identity
+   aws s3 ls s3://management360/
    ```
 
-2. **Revisa los logs de inicio:**
+2. **Revisa los logs de Render:**
    ```
-   [S3] ❌ AWS_ACCESS_KEY_ID is missing or empty
+   [S3] ❌ Error message from AWS
    ```
 
-3. **Verifica en Render:**
-   - Las variables deben estar en **Environment** (no en Secrets)
-   - Asegúrate de que no tengan espacios extra
-   - Redeploy después de cambiarlas
+3. **Verifica región del bucket:**
+   - El bucket debe estar en `us-east-2`
+   - Las credenciales deben ser para la misma región
 
 ### Si Hay Errores de Conexión S3:
 1. **Verifica credenciales de AWS:**
