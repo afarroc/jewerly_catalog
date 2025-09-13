@@ -2,6 +2,7 @@ asgiref==3.8.1
 Django==5.2.3
 dj-database-url==2.2.0
 PyMySQL==1.1.1
+cryptography==43.0.1
 psycopg[binary]==3.2.10
 gunicorn==22.0.0
 python-dotenv==1.0.0
