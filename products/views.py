@@ -9,6 +9,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.utils import timezone
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 from rest_framework import generics, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -23,6 +25,7 @@ from .serializers import (
     ProductListSerializer
 )
 import logging
+import os
 
 logger = logging.getLogger('products')
 api_logger = logging.getLogger('api')
@@ -279,19 +282,50 @@ def image_upload(request):
 
     if request.method == 'POST':
         image_logger.info(f"[UPLOAD] POST request to image_upload by user: {user}")
+
+        # Log file information
+        if request.FILES:
+            for field_name, uploaded_file in request.FILES.items():
+                image_logger.info(f"[UPLOAD] File received: {field_name} = {uploaded_file.name} ({uploaded_file.size} bytes), Content-Type: {uploaded_file.content_type}")
+        else:
+            image_logger.warning(f"[UPLOAD] No files received in POST request")
+
         form = SimpleImageUploadForm(request.POST, request.FILES)
 
         if form.is_valid():
             try:
-                image_upload = form.save()
-                file_size = image_upload.image.size if image_upload.image else 0
-                file_name = image_upload.image.name if image_upload.image else 'No file'
+                image_logger.info(f"[UPLOAD] Form is valid, attempting to save...")
 
-                image_logger.info(f"[SUCCESS] Image uploaded successfully: ID={image_upload.id}, Title='{image_upload.title}', File='{file_name}', Size={file_size} bytes, User={user}")
-                messages.success(request, f'Imagen "{image_upload.title}" subida exitosamente.')
-                return redirect('products:image_list')
+                # Save the form
+                image_upload = form.save()
+
+                # Check if image was actually saved
+                if image_upload.image:
+                    file_size = image_upload.image.size
+                    file_name = image_upload.image.name
+                    file_url = image_upload.image.url if hasattr(image_upload.image, 'url') else 'No URL'
+
+                    image_logger.info(f"[SUCCESS] Image uploaded successfully: ID={image_upload.id}, Title='{image_upload.title}', File='{file_name}', Size={file_size} bytes, URL='{file_url}', User={user}")
+
+                    # Verify file exists in storage
+                    try:
+                        storage = image_upload.image.storage
+                        exists = storage.exists(file_name)
+                        image_logger.info(f"[STORAGE] File exists in storage: {exists}")
+                    except Exception as storage_check_error:
+                        image_logger.warning(f"[STORAGE] Could not verify file existence: {str(storage_check_error)}")
+
+                    messages.success(request, f'Imagen "{image_upload.title}" subida exitosamente.')
+                    return redirect('products:image_list')
+                else:
+                    image_logger.error(f"[ERROR] Image saved but no image file found in model")
+                    messages.error(request, 'Error: La imagen no se guardó correctamente.')
+
             except Exception as e:
                 image_logger.error(f"[ERROR] Error saving image upload: {str(e)}, User={user}")
+                image_logger.error(f"[ERROR] Exception type: {type(e).__name__}")
+                import traceback
+                image_logger.error(f"[ERROR] Traceback: {traceback.format_exc()}")
                 messages.error(request, 'Error al guardar la imagen. Intente nuevamente.')
         else:
             image_logger.warning(f"[WARNING] Invalid form submission in image_upload: {form.errors}, User={user}")
@@ -472,3 +506,111 @@ def image_delete(request, image_id):
         image_logger.error(f"[ERROR] Unexpected error in image_delete for ID={image_id}: {str(e)}, User={user}")
         messages.error(request, 'Error inesperado al procesar la eliminación.')
         return redirect('products:image_list')
+
+
+# S3 Diagnostic View
+@login_required
+def s3_diagnostic(request):
+    """Diagnostic view for S3 configuration and connectivity"""
+    user = request.user.username or 'Anonymous'
+
+    diagnostic_info = {
+        'timestamp': timezone.now(),
+        'user': user,
+        'storage_type': default_storage.__class__.__name__,
+        'bucket_name': getattr(default_storage, 'bucket_name', 'N/A'),
+        'region': getattr(default_storage, 'region_name', 'N/A'),
+        'tests': []
+    }
+
+    # Test 1: Environment variables
+    diagnostic_info['tests'].append({
+        'name': 'Environment Variables',
+        'status': 'success' if os.getenv('AWS_ACCESS_KEY_ID') and os.getenv('AWS_SECRET_ACCESS_KEY') else 'error',
+        'details': {
+            'AWS_ACCESS_KEY_ID': 'Set' if os.getenv('AWS_ACCESS_KEY_ID') else 'Not set',
+            'AWS_SECRET_ACCESS_KEY': 'Set' if os.getenv('AWS_SECRET_ACCESS_KEY') else 'Not set',
+            'AWS_STORAGE_BUCKET_NAME': os.getenv('AWS_STORAGE_BUCKET_NAME', 'Not set'),
+            'AWS_S3_REGION_NAME': os.getenv('AWS_S3_REGION_NAME', 'us-east-2 (default)')
+        }
+    })
+
+    # Test 2: Storage connectivity
+    try:
+        # Try to list objects (limited)
+        objects = list(default_storage.bucket.objects.limit(5)) if hasattr(default_storage, 'bucket') else []
+        diagnostic_info['tests'].append({
+            'name': 'S3 Connectivity',
+            'status': 'success',
+            'details': {
+                'objects_found': len(objects),
+                'sample_objects': [obj.key for obj in objects[:3]]
+            }
+        })
+    except Exception as e:
+        diagnostic_info['tests'].append({
+            'name': 'S3 Connectivity',
+            'status': 'error',
+            'details': {
+                'error': str(e),
+                'error_type': type(e).__name__
+            }
+        })
+
+    # Test 3: File upload
+    try:
+        test_content = b"S3 diagnostic test file - {timezone.now()}"
+        test_filename = f"diagnostic_test_{int(timezone.now().timestamp())}.txt"
+
+        file_obj = ContentFile(test_content)
+        saved_name = default_storage.save(test_filename, file_obj)
+
+        # Check if file exists
+        exists = default_storage.exists(saved_name)
+        file_url = default_storage.url(saved_name) if hasattr(default_storage, 'url') else 'No URL method'
+
+        # Clean up
+        default_storage.delete(saved_name)
+
+        diagnostic_info['tests'].append({
+            'name': 'File Upload Test',
+            'status': 'success' if exists else 'warning',
+            'details': {
+                'file_saved': saved_name,
+                'file_exists': exists,
+                'file_url': file_url,
+                'cleanup_successful': True
+            }
+        })
+    except Exception as e:
+        diagnostic_info['tests'].append({
+            'name': 'File Upload Test',
+            'status': 'error',
+            'details': {
+                'error': str(e),
+                'error_type': type(e).__name__
+            }
+        })
+
+    # Test 4: Recent uploads
+    recent_uploads = ImageUpload.objects.filter(
+        uploaded_at__gte=timezone.now() - timezone.timedelta(hours=24)
+    ).order_by('-uploaded_at')[:5]
+
+    diagnostic_info['recent_uploads'] = []
+    for upload in recent_uploads:
+        diagnostic_info['recent_uploads'].append({
+            'id': upload.id,
+            'title': upload.title,
+            'filename': upload.image.name if upload.image else 'No file',
+            'size': upload.image.size if upload.image else 0,
+            'uploaded_at': upload.uploaded_at,
+            'url': upload.image.url if upload.image else 'No URL'
+        })
+
+    context = {
+        'diagnostic_info': diagnostic_info,
+        'title': 'Diagnóstico S3'
+    }
+
+    return render(request, 'products/s3_diagnostic.html', context)

@@ -20,6 +20,9 @@ urlpatterns = [
     path('images/<int:image_id>/', views.image_detail, name='image_detail'),
     path('images/<int:image_id>/delete/', views.image_delete, name='image_delete'),
 
+    # Diagnostic views (require login)
+    path('diagnostic/s3/', views.s3_diagnostic, name='s3_diagnostic'),
+
     # Category views - MUST come after specific URLs to avoid conflicts
     path('<slug:category_slug>/', views.product_list, name='product_list_by_category'),
 

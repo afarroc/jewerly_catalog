@@ -104,12 +104,14 @@ import storages
 
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
+AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME', 'management360')  # Default bucket name
 AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME', 'us-east-2')
 
 # S3 Configuration
 AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
-AWS_DEFAULT_ACL = 'public-read'
+
+# Updated S3 settings for better compatibility and security
+AWS_DEFAULT_ACL = None  # Remove default ACL to use bucket policy instead
 AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',
 }
@@ -121,9 +123,42 @@ AWS_S3_VERIFY = True
 
 # Use S3 for media files (only if credentials are available)
 if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and AWS_STORAGE_BUCKET_NAME:
+    print(f"[S3] Configuring S3 storage with bucket: {AWS_STORAGE_BUCKET_NAME}")
+    print(f"[S3] AWS_ACCESS_KEY_ID configured: {'Yes' if AWS_ACCESS_KEY_ID else 'No'}")
+    print(f"[S3] AWS_SECRET_ACCESS_KEY configured: {'Yes' if AWS_SECRET_ACCESS_KEY else 'No'}")
+
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
     MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
+
+    # Custom S3 storage class for better error handling
+    class MediaStorage(storages.backends.s3boto3.S3Boto3Storage):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            print(f"[S3] MediaStorage initialized for bucket: {self.bucket_name}")
+
+        def save(self, name, content, max_length=None):
+            try:
+                result = super().save(name, content, max_length)
+                print(f"[S3] File saved successfully: {name}")
+                return result
+            except Exception as e:
+                print(f"[S3] Error saving file {name}: {str(e)}")
+                raise
+
+        def delete(self, name):
+            try:
+                result = super().delete(name)
+                print(f"[S3] File deleted successfully: {name}")
+                return result
+            except Exception as e:
+                print(f"[S3] Error deleting file {name}: {str(e)}")
+                raise
+
+    # Use custom storage class
+    DEFAULT_FILE_STORAGE = 'jewerly_catalog.settings_production.MediaStorage'
+
 else:
+    print("[S3] S3 credentials not found, using local storage")
     # Fallback to local storage if S3 is not configured
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
     MEDIA_URL = '/media/'
