@@ -3,33 +3,33 @@
 {% block auth_title %}Login to Your Account{% endblock %}
 
 {% block auth_content %}
-<form method="POST" class="auth-form">
+<form method="POST">
     {% csrf_token %}
-    
+
     {% for field in form %}
     {% if field.name != 'remember_me' %}
-    <div class="form-group">
+    <div class="mb-3">
         {{ field.label_tag }}
         {{ field }}
         {% if field.errors %}
-        <div class="form-error">
+        <div class="text-danger small mt-1">
             {{ field.errors }}
         </div>
         {% endif %}
     </div>
     {% endif %}
     {% endfor %}
-    
-    <div class="form-group remember-me">
-        {{ form.remember_me.label_tag }}
+
+    <div class="mb-3 form-check">
         {{ form.remember_me }}
+        {{ form.remember_me.label_tag }}
     </div>
-    
-    <button type="submit" class="btn primary-btn btn-block">Login</button>
+
+    <button type="submit" class="btn btn-primary w-100">Login</button>
 </form>
 {% endblock %}
 
 {% block auth_links %}
 <p>Don't have an account? <a href="{% url 'accounts:register' %}">Register here</a></p>
-<p><a href="{% url 'password_reset' %}">Forgot your password?</a></p>
+<p><a href="{% url 'accounts:password_reset' %}">Forgot your password?</a></p>
 {% endblock %}

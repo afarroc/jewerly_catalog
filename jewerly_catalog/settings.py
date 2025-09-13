@@ -43,6 +43,8 @@ INSTALLED_APPS = [
 
     # Third-party apps
     'django_bootstrap5',
+    'rest_framework',
+    'django_filters',
 
     # Local Apps
     'home',
@@ -61,6 +63,12 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    # Custom monitoring middleware
+    'jewerly_catalog.middleware.PerformanceMonitoringMiddleware',
+    'jewerly_catalog.middleware.CacheMonitoringMiddleware',
+    'jewerly_catalog.middleware.SecurityMonitoringMiddleware',
+    'jewerly_catalog.middleware.RequestLoggingMiddleware',
 ]
 
 ROOT_URLCONF = 'jewerly_catalog.urls'
@@ -175,10 +183,14 @@ DEFAULT_CURRENCY = os.getenv('DEFAULT_CURRENCY', 'USD')
 TAX_RATE = float(os.getenv('TAX_RATE', 0.08))  # 8%
 DEFAULT_SHIPPING_COST = float(os.getenv('DEFAULT_SHIPPING_COST', 5.00))
 
+# Cart Settings
+CART_SESSION_ID = 'cart'
+
 # =======================
-# Production Security
+# Production Security & Performance
 # =======================
 if not DEBUG:
+    # Security Headers
     SECURE_HSTS_SECONDS = 3600
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_SSL_REDIRECT = True
@@ -188,6 +200,166 @@ if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
+
+    # Performance optimizations
+    CONN_MAX_AGE = 60  # Database connection pooling
+    USE_TZ = True
+
+    # File handling
+    FILE_UPLOAD_MAX_MEMORY_SIZE = 2621440  # 2.5MB
+    DATA_UPLOAD_MAX_MEMORY_SIZE = 2621440  # 2.5MB
+    FILE_UPLOAD_MAX_NUMBER_FILES = 10
+
+    # Rate limiting (if using django-ratelimit)
+    # RATELIMIT_RATE = '100/h'
+    # RATELIMIT_BLOCK = True
+
+else:
+    # Development optimizations
+    CONN_MAX_AGE = 0  # No connection pooling in development
+    FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB in development
+    DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB in development
+
+# =======================
+# Logging Configuration
+# =======================
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+        'detailed': {
+            'format': '{levelname} {asctime} {name} {funcName}:{lineno} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'logs/django.log',
+            'formatter': 'detailed',
+        },
+        'error_file': {
+            'level': 'ERROR',
+            'class': 'logging.FileHandler',
+            'filename': 'logs/errors.log',
+            'formatter': 'detailed',
+        },
+        'performance_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'logs/performance.log',
+            'formatter': 'detailed',
+        },
+        'security_file': {
+            'level': 'WARNING',
+            'class': 'logging.FileHandler',
+            'filename': 'logs/security.log',
+            'formatter': 'detailed',
+        },
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['error_file'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'django.security': {
+            'handlers': ['security_file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'products': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'orders': {
+            'handlers': ['file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'cache': {
+            'handlers': ['performance_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'api': {
+            'handlers': ['file', 'performance_file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
+# =======================
+# Cache Configuration
+# =======================
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'TIMEOUT': 300,  # 5 minutes default
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
+        }
+    }
+}
+
+# Cache settings for different types of data
+CACHE_MIDDLEWARE_ALIAS = 'default'
+CACHE_MIDDLEWARE_SECONDS = 600  # 10 minutes
+CACHE_MIDDLEWARE_KEY_PREFIX = 'jewerly_catalog'
+
+# =======================
+# REST Framework Configuration
+# =======================
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20,
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',
+        'user': '1000/hour',
+    },
+}
 
 # =======================
 # Default Auto Field

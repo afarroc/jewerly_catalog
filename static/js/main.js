@@ -3,11 +3,9 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize all components with enhanced functionality
     initBannerCarousel();
-    initNavbar(); // Enhanced navbar system
     initSmoothScroll();
     initProductHoverEffects();
     initProductCardActions();
-    initAnnouncementBar();
 });
 
 // Banner Carousel Functionality
@@ -80,84 +78,6 @@ function initBannerCarousel() {
     }
 }
 
-// Mobile Menu Functionality
-function initMobileMenu() {
-    const header = document.querySelector('header');
-    const nav = document.querySelector('.nav');
-
-    if (!nav) return;
-
-    // Create mobile menu button
-    const mobileMenuBtn = document.createElement('button');
-    mobileMenuBtn.className = 'mobile-menu-btn';
-    mobileMenuBtn.innerHTML = '☰';
-    mobileMenuBtn.style.cssText = `
-        display: none;
-        background: none;
-        border: none;
-        font-size: 1.5rem;
-        cursor: pointer;
-        color: var(--secondary-color);
-        padding: 0.5rem;
-    `;
-
-    // Insert button before nav
-    nav.parentNode.insertBefore(mobileMenuBtn, nav);
-
-    // Mobile menu styles
-    const mobileMenuStyles = document.createElement('style');
-    mobileMenuStyles.textContent = `
-        @media (max-width: 768px) {
-            .mobile-menu-btn {
-                display: block !important;
-            }
-            .nav {
-                position: fixed;
-                top: 100%;
-                left: 0;
-                right: 0;
-                background-color: var(--white);
-                flex-direction: column;
-                padding: 1rem;
-                box-shadow: var(--shadow);
-                transform: translateY(-100%);
-                opacity: 0;
-                visibility: hidden;
-                transition: all 0.3s ease;
-                z-index: 999;
-            }
-            .nav.open {
-                transform: translateY(0);
-                opacity: 1;
-                visibility: visible;
-            }
-            .nav-item {
-                margin: 0.5rem 0;
-                width: 100%;
-            }
-            .nav-link {
-                display: block;
-                padding: 1rem;
-                border-radius: var(--border-radius);
-            }
-        }
-    `;
-    document.head.appendChild(mobileMenuStyles);
-
-    // Toggle mobile menu
-    mobileMenuBtn.addEventListener('click', function() {
-        nav.classList.toggle('open');
-        mobileMenuBtn.innerHTML = nav.classList.contains('open') ? '✕' : '☰';
-    });
-
-    // Close menu when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!header.contains(e.target)) {
-            nav.classList.remove('open');
-            mobileMenuBtn.innerHTML = '☰';
-        }
-    });
-}
 
 // Smooth Scroll for Anchor Links
 function initSmoothScroll() {
@@ -244,31 +164,158 @@ function initLazyLoading() {
 // Initialize lazy loading
 initLazyLoading();
 
-// Add to cart functionality (placeholder)
-function addToCart(productId) {
-    // This would typically make an AJAX request
-    console.log('Adding product to cart:', productId);
+// Enhanced add to cart functionality
+function addToCart(productId, quantity = 1) {
+    console.log('Adding product to cart:', productId, 'Quantity:', quantity);
 
-    // Show success message
-    showNotification('Producto agregado al carrito', 'success');
+    // Show loading state
+    showNotification('Agregando producto al carrito...', 'info');
+
+    // Get CSRF token - try multiple selectors
+    let csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    if (!csrfToken) {
+        csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]')?.value;
+    }
+    if (!csrfToken) {
+        // Try to get from meta tag
+        csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    }
+
+    if (!csrfToken) {
+        console.error('CSRF token not found');
+        showNotification('Error: CSRF token not found. Please refresh the page.', 'error');
+        return;
+    }
+
+    // Prepare form data
+    const formData = new FormData();
+    formData.append('quantity', quantity);
+    formData.append('csrfmiddlewaretoken', csrfToken);
+
+    // Make AJAX request
+    fetch(`/cart/add/${productId}/ajax/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message || 'Producto agregado al carrito!', 'success');
+            updateCartCounter(data.cart_total);
+        } else {
+            showNotification(data.error || 'Error al agregar producto', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        // Fallback: try to submit the form normally
+        console.warn('AJAX failed, falling back to form submission');
+        form.submit();
+    });
+}
+
+// Update cart counter in header
+function updateCartCounter(total) {
+    const cartCounter = document.querySelector('.cart-counter');
+    if (cartCounter) {
+        cartCounter.textContent = total;
+        cartCounter.style.display = total > 0 ? 'inline' : 'none';
+    }
+}
+
+// Handle add to cart via AJAX
+async function handleAddToCartAjax(form, productId, quantity) {
+    try {
+        // Get CSRF token - try multiple selectors
+        let csrfToken = form.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        if (!csrfToken) {
+            csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        }
+        if (!csrfToken) {
+            csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]')?.value;
+        }
+        if (!csrfToken) {
+            // Try to get from meta tag
+            csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        }
+
+        if (!csrfToken) {
+            console.error('CSRF token not found');
+            showNotification('Error: CSRF token not found. Please refresh the page.', 'error');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('quantity', quantity);
+        formData.append('csrfmiddlewaretoken', csrfToken);
+
+        const response = await fetch(`/cart/add/${productId}/ajax/`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+            showNotification(data.message || 'Producto agregado al carrito!', 'success');
+            updateCartCounter(data.cart_total || 0);
+        } else {
+            showNotification(data.error || 'Error al agregar producto', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        // Fallback: try to submit the form normally
+        console.warn('AJAX failed, falling back to form submission');
+        form.submit();
+    }
 }
 
 // Show notification
 function showNotification(message, type = 'info') {
+    // Remove existing notifications
+    const existingNotifications = document.querySelectorAll('.notification');
+    existingNotifications.forEach(notification => notification.remove());
+
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
-    notification.textContent = message;
+    notification.innerHTML = `
+        <i class="fas ${getNotificationIcon(type)}"></i>
+        <span>${message}</span>
+    `;
+
+    // Set colors based on type
+    let backgroundColor = '#007bff'; // primary
+    if (type === 'success') backgroundColor = '#28a745';
+    if (type === 'error') backgroundColor = '#dc3545';
+    if (type === 'warning') backgroundColor = '#ffc107';
+
     notification.style.cssText = `
         position: fixed;
         top: 20px;
         right: 20px;
         padding: 1rem 1.5rem;
-        border-radius: var(--border-radius);
-        color: var(--white);
-        background-color: ${type === 'success' ? 'var(--success)' : 'var(--primary-color)'};
-        box-shadow: var(--shadow);
+        border-radius: 8px;
+        color: white;
+        background-color: ${backgroundColor};
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         z-index: 10000;
         animation: slideIn 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        max-width: 400px;
     `;
 
     document.body.appendChild(notification);
@@ -276,7 +323,17 @@ function showNotification(message, type = 'info') {
     setTimeout(() => {
         notification.style.animation = 'slideOut 0.3s ease';
         setTimeout(() => notification.remove(), 300);
-    }, 3000);
+    }, 4000);
+}
+
+// Get notification icon based on type
+function getNotificationIcon(type) {
+    switch (type) {
+        case 'success': return 'fa-check-circle';
+        case 'error': return 'fa-exclamation-triangle';
+        case 'warning': return 'fa-exclamation-circle';
+        default: return 'fa-info-circle';
+    }
 }
 
 // Add notification animations
@@ -307,9 +364,49 @@ function initProductCardActions() {
         }
     });
 
-    // Add to cart buttons
+    // Handle add to cart form submission with AJAX
+    document.addEventListener('submit', function(e) {
+        if (e.target.classList.contains('add-to-cart-form')) {
+            e.preventDefault();
+
+            const form = e.target;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const productId = submitBtn?.getAttribute('data-product-id');
+
+            if (!productId) {
+                console.error('No product ID found');
+                return;
+            }
+
+            // Get form data
+            const formData = new FormData(form);
+            const quantity = formData.get('quantity') || 1;
+
+            // Add loading state
+            if (submitBtn) {
+                const originalText = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Agregando...';
+
+                // Re-enable button after timeout
+                setTimeout(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }, 5000);
+            }
+
+            // Try AJAX first, fallback to form submission
+            handleAddToCartAjax(form, productId, quantity)
+                .catch(error => {
+                    console.warn('AJAX failed, falling back to form submission:', error);
+                    form.submit(); // Fallback to normal form submission
+                });
+        }
+    });
+
+    // Handle add to cart buttons (for product cards)
     document.addEventListener('click', function(e) {
-        if (e.target.closest('.add-to-cart-btn')) {
+        if (e.target.closest('.add-to-cart-btn') && !e.target.closest('.add-to-cart-form')) {
             e.preventDefault();
             const button = e.target.closest('.add-to-cart-btn');
             const productId = button.getAttribute('data-product-id');
@@ -322,40 +419,105 @@ function initProductCardActions() {
 
 // Product Detail Page Functionality
 function initProductDetailPage() {
-    initQuantitySelector();
     initImageGallery();
     initDescriptionTabs();
     initImageModal();
     initProductActions();
 }
 
-// Quantity Selector
+// Quantity Selector - handles both product detail and cart pages
 function initQuantitySelector() {
-    const minusBtn = document.getElementById('qty-minus');
-    const plusBtn = document.getElementById('qty-plus');
-    const quantityInput = document.getElementById('quantity');
+    console.log('Initializing quantity selectors...');
 
-    if (!minusBtn || !plusBtn || !quantityInput) return;
+    // Handle product detail page quantity selector
+    const productMinusBtn = document.getElementById('qty-minus');
+    const productPlusBtn = document.getElementById('qty-plus');
+    const productQuantityInput = document.getElementById('quantity');
+
+    if (productMinusBtn && productPlusBtn && productQuantityInput) {
+        console.log('Found product detail quantity selector');
+        initSingleQuantitySelector(productMinusBtn, productPlusBtn, productQuantityInput);
+    }
+
+    // Handle cart page quantity selectors (Bootstrap version)
+    const cartInputGroups = document.querySelectorAll('.input-group');
+    console.log('Found', cartInputGroups.length, 'cart input groups');
+
+    cartInputGroups.forEach((inputGroup, index) => {
+        const minusBtn = inputGroup.querySelector('.qty-btn.minus');
+        const plusBtn = inputGroup.querySelector('.qty-btn.plus');
+        const quantityInput = inputGroup.querySelector('input[name="quantity"]');
+
+        if (minusBtn && plusBtn && quantityInput) {
+            console.log('Initializing cart quantity selector', index + 1);
+            initSingleQuantitySelector(minusBtn, plusBtn, quantityInput);
+        } else {
+            console.warn('Cart input group', index + 1, 'missing elements:', {
+                minusBtn: !!minusBtn,
+                plusBtn: !!plusBtn,
+                quantityInput: !!quantityInput
+            });
+        }
+    });
+}
+
+// Initialize a single quantity selector
+function initSingleQuantitySelector(minusBtn, plusBtn, quantityInput) {
+    // Check if already initialized to prevent duplicate event listeners
+    if (quantityInput.hasAttribute('data-quantity-initialized')) {
+        console.log('Quantity selector already initialized, skipping');
+        return;
+    }
+    console.log('Initializing quantity selector for input:', quantityInput.id || quantityInput.name);
+    quantityInput.setAttribute('data-quantity-initialized', 'true');
 
     const maxStock = parseInt(quantityInput.getAttribute('max')) || 1;
     const minStock = parseInt(quantityInput.getAttribute('min')) || 1;
 
-    minusBtn.addEventListener('click', () => {
-        const currentValue = parseInt(quantityInput.value);
+    function updateQuantityButtons() {
+        const currentValue = parseInt(quantityInput.value) || 1;
+        minusBtn.disabled = currentValue <= minStock;
+        plusBtn.disabled = currentValue >= maxStock;
+    }
+
+    minusBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        console.log('Minus button clicked, current value:', quantityInput.value);
+        const currentValue = parseInt(quantityInput.value) || 1;
         if (currentValue > minStock) {
             quantityInput.value = currentValue - 1;
+            console.log('New value:', quantityInput.value);
+            updateQuantityButtons();
+            // For cart page, submit form automatically
+            if (quantityInput.form && quantityInput.form.classList.contains('quantity-form')) {
+                console.log('Submitting cart form');
+                quantityInput.form.submit();
+            }
+        } else {
+            console.log('Cannot decrease: at minimum stock');
         }
     });
 
-    plusBtn.addEventListener('click', () => {
-        const currentValue = parseInt(quantityInput.value);
+    plusBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        console.log('Plus button clicked, current value:', quantityInput.value);
+        const currentValue = parseInt(quantityInput.value) || 1;
         if (currentValue < maxStock) {
             quantityInput.value = currentValue + 1;
+            console.log('New value:', quantityInput.value);
+            updateQuantityButtons();
+            // For cart page, submit form automatically
+            if (quantityInput.form && quantityInput.form.classList.contains('quantity-form')) {
+                console.log('Submitting cart form');
+                quantityInput.form.submit();
+            }
+        } else {
+            console.log('Cannot increase: at maximum stock');
         }
     });
 
-    // Prevent manual input outside bounds
-    quantityInput.addEventListener('change', () => {
+    // Handle manual input and validate
+    quantityInput.addEventListener('input', () => {
         let value = parseInt(quantityInput.value);
         if (isNaN(value) || value < minStock) {
             value = minStock;
@@ -363,7 +525,18 @@ function initQuantitySelector() {
             value = maxStock;
         }
         quantityInput.value = value;
+        updateQuantityButtons();
     });
+
+    quantityInput.addEventListener('blur', () => {
+        if (!quantityInput.value || quantityInput.value === '') {
+            quantityInput.value = 1;
+        }
+        updateQuantityButtons();
+    });
+
+    // Initialize button states
+    updateQuantityButtons();
 }
 
 // Image Gallery
@@ -616,10 +789,18 @@ function initEnhancedProductActions() {
 
 // Initialize enhanced functionality
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize quantity selector on all pages that have it
+    initQuantitySelector();
+
     // Check if we're on a product detail page
     if (document.querySelector('.product-detail-container')) {
         initProductDetailPage();
         initEnhancedProductActions();
+    }
+
+    // Check if we're on cart page
+    if (document.querySelector('.cart-table') || document.querySelector('.cart-detail-container')) {
+        initCartPage();
     }
 });
 
@@ -731,7 +912,16 @@ function reportProduct() {
     }
 }
 
-// Initialize product detail functionality when DOM is loaded
+// Cart Page Functionality
+function initCartPage() {
+    // Initialize cart-specific functionality
+    console.log('Initializing cart page functionality');
+
+    // Add any cart-specific event listeners here
+    // For example, handling remove buttons, update forms, etc.
+}
+
+// Additional initialization for product detail page
 document.addEventListener('DOMContentLoaded', function() {
     // Check if we're on a product detail page
     if (document.querySelector('.product-detail-container')) {
@@ -739,1084 +929,47 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Enhanced Robust Navbar functionality
-function initNavbar() {
-    // Initialize desktop navbar
-    initDesktopNavbar();
 
-    // Initialize mobile sidebar
-    initMobileSidebar();
 
-    // Initialize enhanced search
-    initEnhancedSearch();
 
-    // Initialize accessibility features
-    initNavbarAccessibility();
 
-    // Update cart count
-    updateCartCount();
 
-    // Handle window resize
-    handleNavbarResize();
-}
 
-// Enhanced Desktop Navbar Functionality
-function initDesktopNavbar() {
-    // Enhanced dropdown functionality
-    initEnhancedDropdowns();
 
-    // Handle navbar scroll effects
-    initNavbarScrollEffects();
 
-    // Handle window resize
-    handleNavbarResize();
-}
 
-// Enhanced dropdown functionality with better accessibility
-function initEnhancedDropdowns() {
-    const dropdowns = document.querySelectorAll('.dropdown');
 
-    dropdowns.forEach(dropdown => {
-        const toggle = dropdown.querySelector('.dropdown-toggle, .nav-link[aria-haspopup]');
-        const menu = dropdown.querySelector('.dropdown-menu');
 
-        if (toggle && menu) {
-            let isOpen = false;
-            let timeoutId;
 
-            // Mouse enter/leave for desktop
-            dropdown.addEventListener('mouseenter', function() {
-                if (window.innerWidth > 768) {
-                    clearTimeout(timeoutId);
-                    openDropdown(toggle, menu);
-                }
-            });
 
-            dropdown.addEventListener('mouseleave', function() {
-                if (window.innerWidth > 768) {
-                    timeoutId = setTimeout(() => {
-                        closeDropdown(toggle, menu);
-                    }, 150);
-                }
-            });
+// Test function for quantity selectors
+window.testQuantitySelectors = function() {
+    console.log('=== Testing Quantity Selectors ===');
 
-            // Click for mobile
-            toggle.addEventListener('click', function(e) {
-                if (window.innerWidth <= 768) {
-                    e.preventDefault();
-                    if (isOpen) {
-                        closeDropdown(toggle, menu);
-                    } else {
-                        // Close other dropdowns first
-                        closeAllDropdowns();
-                        openDropdown(toggle, menu);
-                    }
-                    isOpen = !isOpen;
-                }
-            });
-
-            // Keyboard navigation
-            toggle.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    if (isOpen) {
-                        closeDropdown(toggle, menu);
-                    } else {
-                        closeAllDropdowns();
-                        openDropdown(toggle, menu);
-                    }
-                    isOpen = !isOpen;
-                } else if (e.key === 'Escape') {
-                    closeDropdown(toggle, menu);
-                    isOpen = false;
-                    toggle.focus();
-                } else if (e.key === 'ArrowDown' && isOpen) {
-                    e.preventDefault();
-                    const firstItem = menu.querySelector('.dropdown-item');
-                    if (firstItem) firstItem.focus();
-                }
-            });
-
-            // Handle focus within dropdown
-            menu.addEventListener('keydown', function(e) {
-                const items = menu.querySelectorAll('.dropdown-item');
-                const currentIndex = Array.from(items).indexOf(document.activeElement);
-
-                if (e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    const nextIndex = (currentIndex + 1) % items.length;
-                    items[nextIndex].focus();
-                } else if (e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    const prevIndex = currentIndex <= 0 ? items.length - 1 : currentIndex - 1;
-                    items[prevIndex].focus();
-                } else if (e.key === 'Escape') {
-                    closeDropdown(toggle, menu);
-                    isOpen = false;
-                    toggle.focus();
-                }
-            });
-        }
-    });
-
-    // Close dropdowns when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.dropdown')) {
-            closeAllDropdowns();
-        }
-    });
-
-    function openDropdown(toggle, menu) {
-        menu.setAttribute('aria-hidden', 'false');
-        toggle.setAttribute('aria-expanded', 'true');
-        menu.style.opacity = '1';
-        menu.style.visibility = 'visible';
-        menu.style.transform = 'translateX(-50%) translateY(10px)';
-    }
-
-    function closeDropdown(toggle, menu) {
-        menu.setAttribute('aria-hidden', 'true');
-        toggle.setAttribute('aria-expanded', 'false');
-        menu.style.opacity = '0';
-        menu.style.visibility = 'hidden';
-        menu.style.transform = 'translateX(-50%) translateY(-10px)';
-    }
-
-    function closeAllDropdowns() {
-        document.querySelectorAll('.dropdown-menu').forEach(menu => {
-            menu.setAttribute('aria-hidden', 'true');
-        });
-        document.querySelectorAll('.dropdown-toggle, [aria-haspopup]').forEach(toggle => {
-            toggle.setAttribute('aria-expanded', 'false');
-        });
-    }
-}
-
-// Navbar scroll effects
-function initNavbarScrollEffects() {
-    const navbar = document.querySelector('.enhanced-navbar');
-    let lastScrollTop = 0;
-    let isScrollingDown = false;
-
-    window.addEventListener('scroll', function() {
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-
-        // Add background blur on scroll
-        if (scrollTop > 50) {
-            navbar.style.background = 'rgba(255, 255, 255, 0.98)';
-            navbar.style.backdropFilter = 'blur(20px)';
-            navbar.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.1)';
-        } else {
-            navbar.style.background = 'rgba(255, 255, 255, 0.95)';
-            navbar.style.backdropFilter = 'blur(20px)';
-            navbar.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.08)';
-        }
-
-        // Hide/show navbar on scroll (optional - can be enabled if desired)
-        /*
-        isScrollingDown = scrollTop > lastScrollTop;
-        lastScrollTop = scrollTop;
-
-        if (isScrollingDown && scrollTop > 200) {
-            navbar.style.transform = 'translateY(-100%)';
-        } else {
-            navbar.style.transform = 'translateY(0)';
-        }
-        */
-    });
-}
-
-// Handle navbar responsive behavior
-function handleNavbarResize() {
-    const mobileToggle = document.getElementById('mobile-menu-toggle');
-    const mobileOverlay = document.getElementById('mobile-nav-overlay');
-
-    window.addEventListener('resize', debounce(function() {
-        if (window.innerWidth >= 768) {
-            // Desktop mode
-            if (mobileOverlay) {
-                mobileOverlay.classList.remove('active');
-                mobileOverlay.setAttribute('aria-hidden', 'true');
-            }
-            if (mobileToggle) {
-                mobileToggle.classList.remove('active');
-                mobileToggle.setAttribute('aria-expanded', 'false');
-            }
-            document.body.style.overflow = 'auto';
-        }
-    }, 250));
-}
-
-// Enhanced Mobile Sidebar Functionality
-function initMobileSidebar() {
-    const mobileToggle = document.getElementById('mobile-menu-toggle');
-    const mobileOverlay = document.getElementById('mobile-nav-overlay');
-    const sidebarClose = document.getElementById('mobile-nav-close');
-
-    if (mobileToggle && mobileOverlay) {
-        // Toggle sidebar
-        mobileToggle.addEventListener('click', function(e) {
-            e.preventDefault();
-            toggleMobileSidebar();
-        });
-
-        // Close sidebar
-        if (sidebarClose) {
-            sidebarClose.addEventListener('click', function(e) {
-                e.preventDefault();
-                closeMobileSidebar();
-            });
-        }
-
-        // Close sidebar when clicking overlay
-        mobileOverlay.addEventListener('click', function(e) {
-            if (e.target === mobileOverlay) {
-                closeMobileSidebar();
-            }
-        });
-
-        // Handle swipe gestures for mobile
-        initSwipeGestures();
-    }
-
-    // Handle escape key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && mobileOverlay.classList.contains('active')) {
-            closeMobileSidebar();
-        }
-    });
-
-    // Close sidebar on navigation (for single-page navigation)
-    const mobileLinks = mobileOverlay.querySelectorAll('.mobile-nav-link');
-    mobileLinks.forEach(link => {
-        link.addEventListener('click', function() {
-            // Only close if it's not an external link or modal trigger
-            if (!this.hasAttribute('data-modal') && !this.hasAttribute('target')) {
-                closeMobileSidebar();
-            }
-        });
-    });
-
-    function toggleMobileSidebar() {
-        const isActive = mobileOverlay.classList.contains('active');
-
-        if (isActive) {
-            closeMobileSidebar();
-        } else {
-            openMobileSidebar();
-        }
-    }
-
-    function openMobileSidebar() {
-        mobileOverlay.classList.add('active');
-        mobileOverlay.setAttribute('aria-hidden', 'false');
-        mobileToggle.classList.add('active');
-        mobileToggle.setAttribute('aria-expanded', 'true');
-        document.body.style.overflow = 'hidden';
-
-        // Focus management
-        const firstFocusable = mobileOverlay.querySelector('.mobile-nav-link');
-        if (firstFocusable) {
-            setTimeout(() => firstFocusable.focus(), 100);
-        }
-
-        // Announce to screen readers
-        announceToScreenReader('Menú de navegación abierto');
-    }
-
-    function closeMobileSidebar() {
-        mobileOverlay.classList.remove('active');
-        mobileOverlay.setAttribute('aria-hidden', 'true');
-        mobileToggle.classList.remove('active');
-        mobileToggle.setAttribute('aria-expanded', 'false');
-        document.body.style.overflow = 'auto';
-
-        // Return focus to toggle button
-        mobileToggle.focus();
-
-        // Announce to screen readers
-        announceToScreenReader('Menú de navegación cerrado');
-    }
-
-    // Swipe gesture support for mobile
-    function initSwipeGestures() {
-        let startX = 0;
-        let startY = 0;
-        let isTracking = false;
-
-        mobileOverlay.addEventListener('touchstart', function(e) {
-            startX = e.touches[0].clientX;
-            startY = e.touches[0].clientY;
-            isTracking = true;
-        });
-
-        mobileOverlay.addEventListener('touchmove', function(e) {
-            if (!isTracking) return;
-
-            const currentX = e.touches[0].clientX;
-            const currentY = e.touches[0].clientY;
-            const diffX = startX - currentX;
-            const diffY = startY - currentY;
-
-            // Only handle horizontal swipes
-            if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
-                if (diffX > 0) {
-                    // Swipe left - close sidebar
-                    closeMobileSidebar();
-                }
-                isTracking = false;
-            }
-        });
-
-        mobileOverlay.addEventListener('touchend', function() {
-            isTracking = false;
-        });
-    }
-
-    // Screen reader announcements
-    function announceToScreenReader(message) {
-        const announcement = document.createElement('div');
-        announcement.setAttribute('aria-live', 'polite');
-        announcement.setAttribute('aria-atomic', 'true');
-        announcement.style.position = 'absolute';
-        announcement.style.left = '-10000px';
-        announcement.style.width = '1px';
-        announcement.style.height = '1px';
-        announcement.style.overflow = 'hidden';
-
-        announcement.textContent = message;
-        document.body.appendChild(announcement);
-
-        setTimeout(() => {
-            document.body.removeChild(announcement);
-        }, 1000);
-    }
-}
-
-// Dropdown functionality for desktop
-function initDropdowns() {
-    const dropdowns = document.querySelectorAll('.dropdown');
-
-    dropdowns.forEach(dropdown => {
-        const toggle = dropdown.querySelector('.dropdown-toggle');
-        const menu = dropdown.querySelector('.dropdown-menu');
-
-        if (toggle && menu) {
-            // Mouse enter/leave for desktop
-            dropdown.addEventListener('mouseenter', function() {
-                if (window.innerWidth > 768) {
-                    menu.setAttribute('aria-hidden', 'false');
-                    toggle.setAttribute('aria-expanded', 'true');
-                }
-            });
-
-            dropdown.addEventListener('mouseleave', function() {
-                if (window.innerWidth > 768) {
-                    menu.setAttribute('aria-hidden', 'true');
-                    toggle.setAttribute('aria-expanded', 'false');
-                }
-            });
-
-            // Click for mobile
-            toggle.addEventListener('click', function(e) {
-                if (window.innerWidth <= 768) {
-                    e.preventDefault();
-                    const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
-                    toggle.setAttribute('aria-expanded', !isExpanded);
-                    menu.setAttribute('aria-hidden', isExpanded);
-                }
-            });
-        }
-    });
-
-    // Close dropdowns when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.dropdown')) {
-            document.querySelectorAll('.dropdown-menu').forEach(menu => {
-                menu.setAttribute('aria-hidden', 'true');
-            });
-            document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
-                toggle.setAttribute('aria-expanded', 'false');
-            });
-        }
-    });
-}
-
-// Keyboard navigation for accessibility
-function initKeyboardNavigation() {
-    const navLinks = document.querySelectorAll('.nav-link');
-    const dropdownItems = document.querySelectorAll('.dropdown-item');
-
-    // Arrow key navigation for dropdowns
-    document.addEventListener('keydown', function(e) {
-        const activeElement = document.activeElement;
-
-        if (e.key === 'ArrowDown' && activeElement.closest('.dropdown')) {
-            e.preventDefault();
-            const dropdown = activeElement.closest('.dropdown');
-            const menu = dropdown.querySelector('.dropdown-menu');
-            const firstItem = menu.querySelector('.dropdown-item');
-
-            if (firstItem && menu.getAttribute('aria-hidden') !== 'false') {
-                menu.setAttribute('aria-hidden', 'false');
-                activeElement.setAttribute('aria-expanded', 'true');
-                firstItem.focus();
-            }
-        }
-
-        if (e.key === 'Escape') {
-            // Close any open dropdowns
-            document.querySelectorAll('.dropdown-menu').forEach(menu => {
-                menu.setAttribute('aria-hidden', 'true');
-            });
-            document.querySelectorAll('.dropdown-toggle').forEach(toggle => {
-                toggle.setAttribute('aria-expanded', 'false');
-            });
-
-            // Return focus to toggle
-            const focusedDropdown = document.activeElement.closest('.dropdown');
-            if (focusedDropdown) {
-                focusedDropdown.querySelector('.dropdown-toggle').focus();
-            }
-        }
-    });
-
-    // Tab navigation
-    navLinks.forEach(link => {
-        link.addEventListener('focus', function() {
-            // Close other dropdowns when focusing on a new nav item
-            document.querySelectorAll('.dropdown-menu').forEach(menu => {
-                if (!this.closest('.dropdown')?.contains(menu)) {
-                    menu.setAttribute('aria-hidden', 'true');
-                }
-            });
-        });
-    });
-}
-
-// Update cart count in navbar
-function updateCartCount() {
-    const cartCountElement = document.getElementById('cart-count');
-    if (cartCountElement) {
-        // This would typically get the cart count from localStorage or API
-        const cartCount = localStorage.getItem('cartCount') || 0;
-        if (cartCount > 0) {
-            cartCountElement.textContent = cartCount;
-            cartCountElement.style.display = 'flex';
-        } else {
-            cartCountElement.style.display = 'none';
-        }
-    }
-}
-
-// Back to top functionality
-function initBackToTop() {
-    const backToTopBtn = document.getElementById('back-to-top');
-
-    if (!backToTopBtn) return;
-
-    // Show/hide button based on scroll position
-    window.addEventListener('scroll', function() {
-        if (window.pageYOffset > 300) {
-            backToTopBtn.classList.add('visible');
-        } else {
-            backToTopBtn.classList.remove('visible');
-        }
-    });
-
-    // Scroll to top when clicked
-    backToTopBtn.addEventListener('click', function() {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
-        });
-    });
-}
-
-// Newsletter signup functionality
-function initNewsletterSignup() {
-    const newsletterForm = document.getElementById('newsletter-form');
-
-    if (!newsletterForm) return;
-
-    newsletterForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        const emailInput = this.querySelector('input[type="email"]');
-        const submitBtn = this.querySelector('button');
-
-        if (!emailInput.value) {
-            showNotification('Por favor ingresa tu email', 'error');
-            return;
-        }
-
-        const removeLoading = addLoadingState(submitBtn);
-        submitBtn.disabled = true;
-
-        // Simulate API call
-        setTimeout(() => {
-            removeLoading();
-            emailInput.value = '';
-            showNotification('¡Gracias por suscribirte! Recibirás nuestras últimas novedades.', 'success');
-        }, 1500);
-    });
-}
-
-// Announcement bar functionality
-function initAnnouncementBar() {
-    const announcementClose = document.getElementById('announcement-close');
-    const announcementBar = document.querySelector('.announcement-bar');
-
-    if (announcementClose && announcementBar) {
-        announcementClose.addEventListener('click', function() {
-            announcementBar.style.display = 'none';
-        });
-
-        // Auto-hide after 10 seconds
-        setTimeout(() => {
-            if (announcementBar.style.display !== 'none') {
-                announcementBar.style.display = 'none';
-            }
-        }, 10000);
-    }
-}
-
-// Enhanced cart functionality
-function addToCart(productId, quantity = 1) {
-    // Update localStorage cart count
-    let cartCount = parseInt(localStorage.getItem('cartCount') || 0);
-    cartCount += quantity;
-    localStorage.setItem('cartCount', cartCount);
-
-    // Update cart count display
-    updateCartCount();
-
-    // Show notification
-    showNotification('Producto agregado al carrito', 'success');
-
-    // This would typically make an AJAX request to add to cart
-    console.log('Adding to cart:', productId, 'Quantity:', quantity);
-}
-
-// Smooth scroll for anchor links
-function initSmoothScroll() {
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                e.preventDefault();
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
-        });
-    });
-}
-
-// Navbar Accessibility Features
-function initNavbarAccessibility() {
-    // Skip link functionality
-    const skipLink = document.querySelector('.skip-link');
-    if (skipLink) {
-        skipLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            const mainContent = document.getElementById('main-content');
-            if (mainContent) {
-                mainContent.focus();
-                mainContent.scrollIntoView();
-            }
-        });
-
-        // Show skip link on focus
-        skipLink.addEventListener('focus', function() {
-            this.style.top = '6px';
-        });
-
-        skipLink.addEventListener('blur', function() {
-            this.style.top = '-40px';
-        });
-    }
-
-    // Focus trap for mobile menu
-    const mobileOverlay = document.getElementById('mobile-nav-overlay');
-    if (mobileOverlay) {
-        mobileOverlay.addEventListener('keydown', function(e) {
-            if (e.key === 'Tab') {
-                const focusableElements = mobileOverlay.querySelectorAll(
-                    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-                );
-                const firstElement = focusableElements[0];
-                const lastElement = focusableElements[focusableElements.length - 1];
-
-                if (e.shiftKey) {
-                    if (document.activeElement === firstElement) {
-                        lastElement.focus();
-                        e.preventDefault();
-                    }
-                } else {
-                    if (document.activeElement === lastElement) {
-                        firstElement.focus();
-                        e.preventDefault();
-                    }
-                }
-            }
-        });
-    }
-
-    // Announce dynamic content changes
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-                const addedNode = mutation.addedNodes[0];
-                if (addedNode.nodeType === Node.ELEMENT_NODE &&
-                    (addedNode.classList.contains('dropdown-menu') ||
-                     addedNode.classList.contains('search-suggestions'))) {
-                    announceToScreenReader('Contenido dinámico cargado');
-                }
-            }
-        });
-    });
-
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
-
-    function announceToScreenReader(message) {
-        const announcement = document.createElement('div');
-        announcement.setAttribute('aria-live', 'polite');
-        announcement.setAttribute('aria-atomic', 'true');
-        announcement.style.position = 'absolute';
-        announcement.style.left = '-10000px';
-        announcement.style.width = '1px';
-        announcement.style.height = '1px';
-        announcement.style.overflow = 'hidden';
-
-        announcement.textContent = message;
-        document.body.appendChild(announcement);
-
-        setTimeout(() => {
-            document.body.removeChild(announcement);
-        }, 1000);
-    }
-}
-
-// Enhanced initialization with error handling and performance optimizations
-document.addEventListener('DOMContentLoaded', function() {
-    try {
-        // Core navbar functionality
-        initNavbar();
-
-        // Additional features
-        initBackToTop();
-        initNewsletterSignup();
-        initAnnouncementBar();
-        initSmoothScroll();
-
-        // Page-specific functionality
-        if (document.querySelector('.product-detail-container')) {
-            initProductDetailPage();
-            initEnhancedProductActions();
-        }
-
-        // Performance optimizations (lazy load)
-        setTimeout(() => {
-            initPerformanceOptimizations();
-        }, 1000);
-
-        console.log('Enhanced navbar system initialized successfully');
-    } catch (error) {
-        console.error('Error during enhanced navbar initialization:', error);
-        // Fallback: ensure basic functionality works
-        initMobileSidebar();
-        initEnhancedSearch();
-    }
-});
-
-// Performance optimizations
-function initPerformanceOptimizations() {
-    // Preload critical resources
-    const criticalImages = document.querySelectorAll('img[loading="lazy"]');
-    criticalImages.forEach(img => {
-        if (img.getBoundingClientRect().top < window.innerHeight * 2) {
-            img.loading = 'eager';
-        }
-    });
-
-    // Optimize scroll performance
-    let ticking = false;
-    window.addEventListener('scroll', function() {
-        if (!ticking) {
-            requestAnimationFrame(function() {
-                // Handle scroll-based optimizations
-                optimizeVisibleElements();
-                ticking = false;
-            });
-            ticking = true;
-        }
-    });
-
-    function optimizeVisibleElements() {
-        // Add will-change property to animating elements during scroll
-        const animatingElements = document.querySelectorAll('.action-btn, .nav-link');
-        animatingElements.forEach(el => {
-            el.style.willChange = 'transform';
-            setTimeout(() => {
-                el.style.willChange = 'auto';
-            }, 1000);
-        });
-    }
-}
-
-// Enhanced Search Functionality
-function initEnhancedSearch() {
-    const searchInputs = document.querySelectorAll('.search-input');
-    const searchForms = document.querySelectorAll('.search-form');
-
-    searchInputs.forEach((searchInput, index) => {
-        const searchForm = searchForms[index];
-        if (!searchInput || !searchForm) return;
-
-        let searchTimeout;
-        let currentSuggestions = [];
-        let selectedIndex = -1;
-
-        // Search input wrapper for better event handling
-        const searchWrapper = searchInput.closest('.search-input-wrapper') || searchInput.parentElement;
-        const searchBtn = searchWrapper ? searchWrapper.querySelector('.search-btn') : null;
-        const searchClear = searchWrapper ? searchWrapper.querySelector('.search-clear') : null;
-
-        // Real-time search suggestions (debounced)
-        searchInput.addEventListener('input', function() {
-            const query = this.value.trim();
-            clearTimeout(searchTimeout);
-
-            // Show/hide clear button
-            if (searchClear) {
-                searchClear.style.display = query ? 'flex' : 'none';
-            }
-
-            if (query.length >= 2) {
-                searchTimeout = setTimeout(() => {
-                    showEnhancedSearchSuggestions(query, searchInput);
-                }, 300);
-            } else {
-                hideSearchSuggestions(searchInput);
-            }
-
-            selectedIndex = -1;
-        });
-
-        // Clear search
-        if (searchClear) {
-            searchClear.addEventListener('click', function() {
-                searchInput.value = '';
-                searchInput.focus();
-                hideSearchSuggestions(searchInput);
-                this.style.display = 'none';
-            });
-        }
-
-        // Handle search form submission
-        searchForm.addEventListener('submit', function(e) {
-            const query = searchInput.value.trim();
-            if (!query) {
-                e.preventDefault();
-                showNotification('Por favor ingresa un término de búsqueda', 'warning');
-                searchInput.focus();
-                return;
-            }
-
-            // Add loading state
-            const removeLoading = addLoadingState(searchBtn);
-            hideSearchSuggestions(searchInput);
-
-            // Simulate search processing
-            setTimeout(() => {
-                removeLoading();
-            }, 500);
-        });
-
-        // Keyboard navigation for search
-        searchInput.addEventListener('keydown', function(e) {
-            const suggestions = this.parentElement.querySelector('.search-suggestions');
-
-            if (!suggestions || suggestions.style.display === 'none') {
-                if (e.key === 'Escape') {
-                    this.blur();
-                }
-                return;
-            }
-
-            const suggestionItems = suggestions.querySelectorAll('.suggestion-item');
-
-            switch (e.key) {
-                case 'ArrowDown':
-                    e.preventDefault();
-                    selectedIndex = (selectedIndex + 1) % suggestionItems.length;
-                    updateSuggestionSelection(suggestionItems, selectedIndex);
-                    break;
-                case 'ArrowUp':
-                    e.preventDefault();
-                    selectedIndex = selectedIndex <= 0 ? suggestionItems.length - 1 : selectedIndex - 1;
-                    updateSuggestionSelection(suggestionItems, selectedIndex);
-                    break;
-                case 'Enter':
-                    if (selectedIndex >= 0 && suggestionItems[selectedIndex]) {
-                        e.preventDefault();
-                        suggestionItems[selectedIndex].click();
-                    }
-                    break;
-                case 'Escape':
-                    hideSearchSuggestions(searchInput);
-                    selectedIndex = -1;
-                    break;
-            }
-        });
-
-        // Close suggestions when clicking outside
-        document.addEventListener('click', function(e) {
-            const navbarSearch = searchInput.closest('.navbar-search') || searchInput.parentElement;
-            if (navbarSearch && !navbarSearch.contains(e.target)) {
-                hideSearchSuggestions(searchInput);
-                selectedIndex = -1;
-            }
-        });
-
-        // Handle focus events
-        searchInput.addEventListener('focus', function() {
-            const query = this.value.trim();
-            if (query.length >= 2) {
-                showEnhancedSearchSuggestions(query, this);
-            }
-        });
-
-        searchInput.addEventListener('blur', function() {
-            // Delay hiding to allow clicking on suggestions
-            setTimeout(() => {
-                const navbarSearch = this.closest('.navbar-search') || this.parentElement;
-                if (navbarSearch && !navbarSearch.contains(document.activeElement)) {
-                    hideSearchSuggestions(this);
-                    selectedIndex = -1;
-                }
-            }, 150);
-        });
-    });
-
-    function showEnhancedSearchSuggestions(query, searchInput) {
-        hideSearchSuggestions(searchInput);
-
-        // Create suggestions container
-        const searchWrapper = searchInput.closest('.search-input-wrapper') || searchInput.parentElement;
-        if (!searchWrapper) return;
-
-        const suggestions = document.createElement('div');
-        suggestions.className = 'search-suggestions';
-        suggestions.setAttribute('role', 'listbox');
-        suggestions.setAttribute('aria-label', 'Sugerencias de búsqueda');
-
-        // Mock search suggestions - replace with actual API call
-        const mockSuggestions = [
-            { text: `Buscar "${query}" en productos`, icon: 'fas fa-search', action: 'search' },
-            { text: `Buscar "${query}" en categorías`, icon: 'fas fa-tags', action: 'category' },
-            { text: `Ver productos destacados`, icon: 'fas fa-star', action: 'featured' }
-        ];
-
-        mockSuggestions.forEach((suggestion, index) => {
-            const item = document.createElement('div');
-            item.className = 'suggestion-item';
-            item.setAttribute('role', 'option');
-            item.setAttribute('tabindex', '-1');
-            item.innerHTML = `
-                <i class="${suggestion.icon}" aria-hidden="true"></i>
-                <span>${suggestion.text}</span>
-            `;
-
-            item.addEventListener('click', function() {
-                handleSuggestionClick(suggestion, query, searchInput);
-            });
-
-            item.addEventListener('mouseenter', function() {
-                selectedIndex = index;
-                updateSuggestionSelection(suggestions.querySelectorAll('.suggestion-item'), selectedIndex);
-            });
-
-            suggestions.appendChild(item);
-        });
-
-        searchWrapper.appendChild(suggestions);
-        suggestions.style.display = 'block';
-
-        // Position suggestions
-        positionSuggestions(suggestions, searchInput);
-    }
-
-    function handleSuggestionClick(suggestion, query, searchInput) {
-        searchInput.value = query;
-        hideSearchSuggestions(searchInput);
-
-        // Handle different suggestion types
-        switch (suggestion.action) {
-            case 'search':
-                const form = searchInput.closest('form') || searchInput.parentElement;
-                if (form && form.tagName === 'FORM') {
-                    form.submit();
-                }
-                break;
-            case 'category':
-                // Redirect to category search
-                window.location.href = `/products/?q=${encodeURIComponent(query)}&type=category`;
-                break;
-            case 'featured':
-                // Redirect to featured products
-                window.location.href = '/products/?featured=true';
-                break;
-        }
-    }
-
-    function updateSuggestionSelection(items, selectedIndex) {
-        items.forEach((item, index) => {
-            item.classList.toggle('selected', index === selectedIndex);
-        });
-    }
-
-    function positionSuggestions(suggestions, searchInput) {
-        const rect = searchInput.getBoundingClientRect();
-        const viewportHeight = window.innerHeight;
-        const suggestionsHeight = 200; // Approximate height
-
-        // Position below input by default
-        suggestions.style.top = '100%';
-        suggestions.style.bottom = 'auto';
-
-        // If not enough space below, position above
-        if (rect.bottom + suggestionsHeight > viewportHeight) {
-            suggestions.style.top = 'auto';
-            suggestions.style.bottom = '100%';
-        }
-    }
-
-    function hideSearchSuggestions(searchInput) {
-        const parentElement = searchInput.parentElement;
-        if (parentElement) {
-            const suggestions = parentElement.querySelector('.search-suggestions');
-            if (suggestions) {
-                suggestions.remove();
-            }
-        }
-    }
-}
-
-// Show search suggestions
-function showSearchSuggestions(query) {
-    // Remove existing suggestions
-    hideSearchSuggestions();
-
-    // Create suggestions container
-    const searchWrapper = document.querySelector('.search-input-wrapper');
-    const suggestions = document.createElement('div');
-    suggestions.className = 'search-suggestions';
-    suggestions.innerHTML = `
-        <div class="suggestion-item">
-            <i class="fas fa-search"></i>
-            <span>Buscar "${query}" en productos</span>
-        </div>
-        <div class="suggestion-item">
-            <i class="fas fa-star"></i>
-            <span>Buscar "${query}" en destacados</span>
-        </div>
-    `;
-
-    searchWrapper.appendChild(suggestions);
-
-    // Add click handlers
-    suggestions.querySelectorAll('.suggestion-item').forEach(item => {
-        item.addEventListener('click', function() {
-            const searchInput = document.querySelector('.search-input');
-            searchInput.value = query;
-            const form = searchInput.closest('form') || searchInput.parentElement;
-            if (form && form.tagName === 'FORM') {
-                form.submit();
-            }
-        });
-    });
-}
-
-// Hide search suggestions
-function hideSearchSuggestions() {
-    const suggestions = document.querySelector('.search-suggestions');
-    if (suggestions) {
-        suggestions.remove();
-    }
-}
-
-// Enhanced cart functionality with localStorage
-function updateCartCount() {
-    const cartCountElement = document.getElementById('cart-count');
-    if (cartCountElement) {
-        // Get cart count from localStorage or API
-        let cartCount = 0;
-
-        // Try to get from localStorage first
-        const storedCart = localStorage.getItem('jewelryCart');
-        if (storedCart) {
-            try {
-                const cart = JSON.parse(storedCart);
-                cartCount = cart.reduce((total, item) => total + item.quantity, 0);
-            } catch (e) {
-                console.warn('Error parsing cart data:', e);
-            }
-        }
-
-        if (cartCount > 0) {
-            cartCountElement.textContent = cartCount > 99 ? '99+' : cartCount;
-            cartCountElement.style.display = 'flex';
-        } else {
-            cartCountElement.style.display = 'none';
-        }
-    }
-}
-
-// Enhanced add to cart with localStorage
-function addToCart(productId, quantity = 1) {
-    // Get existing cart
-    let cart = [];
-    const storedCart = localStorage.getItem('jewelryCart');
-
-    if (storedCart) {
-        try {
-            cart = JSON.parse(storedCart);
-        } catch (e) {
-            console.warn('Error parsing cart data, resetting cart');
-            cart = [];
-        }
-    }
-
-    // Check if product already exists
-    const existingItem = cart.find(item => item.id === productId);
-
-    if (existingItem) {
-        existingItem.quantity += quantity;
+    // Test product detail selector
+    const productInput = document.getElementById('quantity');
+    if (productInput) {
+        console.log('Product detail input found, value:', productInput.value);
+        console.log('Step attribute:', productInput.getAttribute('step'));
+        console.log('Min attribute:', productInput.getAttribute('min'));
+        console.log('Max attribute:', productInput.getAttribute('max'));
     } else {
-        cart.push({
-            id: productId,
-            quantity: quantity,
-            addedAt: new Date().toISOString()
-        });
+        console.log('Product detail input not found');
     }
 
-    // Save to localStorage
-    localStorage.setItem('jewelryCart', JSON.stringify(cart));
+    // Test cart selectors
+    const cartSelectors = document.querySelectorAll('.quantity-selector');
+    console.log('Found', cartSelectors.length, 'cart selectors');
 
-    // Update UI
-    updateCartCount();
+    cartSelectors.forEach((selector, index) => {
+        const input = selector.querySelector('input[name="quantity"]');
+        if (input) {
+            console.log(`Cart selector ${index + 1}: value=${input.value}, step=${input.getAttribute('step')}`);
+        }
+    });
 
-    // Show notification
-    showNotification(`Producto agregado al carrito (${quantity})`, 'success');
-
-    console.log('Cart updated:', cart);
-}
+    console.log('=== End Test ===');
+};
 
 // Export functions for global use
 window.JewelryEcommerce = {
@@ -1828,5 +981,5 @@ window.JewelryEcommerce = {
     shareProduct,
     printProduct,
     reportProduct,
-    updateCartCount
+    testQuantitySelectors
 };

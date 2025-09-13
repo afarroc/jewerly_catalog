@@ -30,15 +30,16 @@
     <!-- Stripe -->
     <meta name="stripe-public-key" content="{{ STRIPE_PUBLIC_KEY }}">
 
+    <!-- CSRF Token for AJAX requests -->
+    {% csrf_token %}
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
     {% block extra_head %}
     {% endblock %}
 </head>
 <body>
-    <!-- Skip to main content for accessibility -->
-    <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
 
-    <!-- Header -->
-    {% include 'home/_header.html' %}
+{% include 'home/includes/header.html' %}
 
     <!-- Main Content -->
     <main id="main-content" class="main-content">
@@ -50,9 +51,6 @@
         </div>
     </main>
 
-    <!-- Footer -->
-    {% include 'home/_footer.html' %}
-
     <!-- Bootstrap JS -->
     {% bootstrap_javascript %}
 
@@ -63,9 +61,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize common functionality
-            initNavbar();
-            initBackToTop();
-            initNewsletterSignup();
+            // Header and footer functionality removed
         });
     </script>
 
@@ -74,5 +70,7 @@
 
     {% block extra_js %}
     {% endblock %}
+
+{% include 'home/includes/footer.html' %}
 </body>
 </html>

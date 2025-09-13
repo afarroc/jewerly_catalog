@@ -3,25 +3,25 @@
 {% block auth_title %}Register Account{% endblock %}
 
 {% block auth_content %}
-<form method="POST" class="auth-form">
+<form method="POST">
     {% csrf_token %}
-    
+
     {% for field in form %}
-    <div class="form-group">
+    <div class="mb-3">
         {{ field.label_tag }}
         {{ field }}
         {% if field.errors %}
-        <div class="form-error">
+        <div class="text-danger small mt-1">
             {{ field.errors }}
         </div>
         {% endif %}
         {% if field.help_text %}
-        <small class="form-help">{{ field.help_text }}</small>
+        <small class="text-muted">{{ field.help_text }}</small>
         {% endif %}
     </div>
     {% endfor %}
-    
-    <button type="submit" class="btn primary-btn btn-block">Register</button>
+
+    <button type="submit" class="btn btn-primary w-100">Register</button>
 </form>
 {% endblock %}
 

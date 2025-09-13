@@ -1,16 +1,9 @@
-# products/urls.py
 from django.urls import path
 from . import views
 
-app_name = 'products'
+app_name = 'products_api'
 
 urlpatterns = [
-    # Template views
-    path('', views.product_list, name='product_list'),
-    path('<slug:category_slug>/', views.product_list, name='product_list_by_category'),
-    path('<int:id>/<slug:slug>/', views.ProductDetailView.as_view(), name='product_detail'),
-
-    # API views
     path('list/', views.ProductListAPIView.as_view(), name='api_product_list'),
     path('detail/<slug:slug>/', views.ProductDetailAPIView.as_view(), name='api_product_detail'),
     path('categories/list/', views.CategoryListAPIView.as_view(), name='api_category_list'),

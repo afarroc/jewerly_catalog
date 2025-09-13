@@ -1,110 +1,130 @@
 {% load static %}
-<article class="product-card">
-    <div class="product-badges">
-        {% if product.created_at|date:'Y-m-d' > 'now'|date:'Y-m-d'|date:'Y-m-d -7 days' %}
-        <span class="badge new-badge">
-            <i class="fas fa-star"></i>New
-        </span>
-        {% endif %}
-        {% if product.stock <= 5 and product.stock > 0 %}
-        <span class="badge limited-badge">
-            <i class="fas fa-exclamation-triangle"></i>Limited
-        </span>
-        {% endif %}
-    </div>
-
-    <a href="{% url 'products:product_detail' product.id product.slug %}" class="product-link">
-        {% if product.image %}
-        <div class="product-image-wrapper">
-            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-image">
-            <div class="product-overlay">
-                <button class="btn quick-view-btn" data-url="{% url 'products:product_detail' product.id product.slug %}">
-                    <i class="fas fa-eye"></i>Quick View
-                </button>
-            </div>
-        </div>
-        {% endif %}
-
-        <div class="product-details">
-            <div class="product-header">
-                <h3 class="product-title">{{ product.name }}</h3>
-                {% if product.category %}
-                <span class="product-category">
-                    <i class="fas fa-tag"></i>{{ product.category.name }}
+<div class="col-12 col-sm-6 col-md-4 col-lg-3 col-xl-3 mb-4">
+    <div class="card h-100 shadow-sm border-0 product-card" style="min-height: 450px;">
+        <!-- Product Badges -->
+        <div class="position-absolute top-0 start-0 p-2" style="z-index: 10;">
+            {% if product.created_at|date:'Y-m-d' > 'now'|date:'Y-m-d'|date:'Y-m-d -7 days' %}
+                <span class="badge bg-warning text-dark me-1">
+                    <i class="fas fa-star me-1"></i>New
                 </span>
-                {% endif %}
-            </div>
+            {% endif %}
+            {% if product.stock <= 5 and product.stock > 0 %}
+                <span class="badge bg-danger me-1">
+                    <i class="fas fa-exclamation-triangle me-1"></i>Limited
+                </span>
+            {% endif %}
+        </div>
 
-            {% if product.description %}
-            <p class="product-description">
-                {{ product.description|truncatechars:80 }}
-            </p>
+        <!-- Product Image -->
+        <div class="position-relative">
+            {% if product.image %}
+                <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+                <div class="card-img-overlay d-flex align-items-center justify-content-center">
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#quickViewModal"
+                            onclick="loadQuickView({{ product.id }})">
+                        <i class="fas fa-eye me-1"></i>Quick View
+                    </button>
+                </div>
+            {% else %}
+                <div class="bg-light d-flex align-items-center justify-content-center no-image-placeholder">
+                    <i class="fas fa-image text-muted fa-3x"></i>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Card Body -->
+        <div class="card-body d-flex flex-column">
+            <!-- Product Title -->
+            <h5 class="card-title mb-2">
+                <a href="{% url 'products:product_detail' product.id product.slug %}"
+                   class="text-decoration-none text-dark fw-bold">
+                    {{ product.name }}
+                </a>
+            </h5>
+
+            <!-- Category -->
+            {% if product.category %}
+                <p class="text-muted small mb-2">
+                    <i class="fas fa-tag me-1"></i>{{ product.category.name }}
+                </p>
             {% endif %}
 
-            <div class="product-properties">
-                <div class="property-group">
-                    <span class="property-item jewelry-type">
+            <!-- Description -->
+            {% if product.description %}
+                <p class="card-text text-muted small mb-3">
+                    {{ product.description|truncatechars:80 }}
+                </p>
+            {% endif %}
+
+            <!-- Properties -->
+            <div class="mb-3">
+                <div class="d-flex flex-wrap gap-1 mb-2">
+                    <span class="badge bg-info">
                         {% if product.jewelry_type == 'ring' %}
-                            <i class="fas fa-ring"></i>
+                            <i class="fas fa-ring me-1"></i>
                         {% elif product.jewelry_type == 'necklace' %}
-                            <i class="fas fa-gem"></i>
+                            <i class="fas fa-gem me-1"></i>
                         {% elif product.jewelry_type == 'bracelet' %}
-                            <i class="fas fa-circle-notch"></i>
+                            <i class="fas fa-circle-notch me-1"></i>
                         {% elif product.jewelry_type == 'earring' %}
-                            <i class="fas fa-circle"></i>
+                            <i class="fas fa-circle me-1"></i>
                         {% elif product.jewelry_type == 'brooch' %}
-                            <i class="fas fa-map-pin"></i>
+                            <i class="fas fa-map-pin me-1"></i>
                         {% elif product.jewelry_type == 'tiara' %}
-                            <i class="fas fa-crown"></i>
+                            <i class="fas fa-crown me-1"></i>
                         {% else %}
-                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star me-1"></i>
                         {% endif %}
                         {{ product.get_jewelry_type_display }}
                     </span>
-
-                    <span class="property-item material">
+                    <span class="badge bg-secondary">
                         {% if product.material == 'metal' %}
-                            <i class="fas fa-tools"></i>
+                            <i class="fas fa-tools me-1"></i>
                         {% elif product.material == 'resin' %}
-                            <i class="fas fa-palette"></i>
+                            <i class="fas fa-palette me-1"></i>
                         {% elif product.material == 'glass' %}
-                            <i class="fas fa-wine-glass"></i>
+                            <i class="fas fa-wine-glass me-1"></i>
                         {% elif product.material == 'crystal' %}
-                            <i class="fas fa-diamond"></i>
+                            <i class="fas fa-diamond me-1"></i>
                         {% elif product.material == 'pearl' %}
-                            <i class="fas fa-circle"></i>
+                            <i class="fas fa-circle me-1"></i>
                         {% elif product.material == 'fabric' %}
-                            <i class="fas fa-scroll"></i>
+                            <i class="fas fa-scroll me-1"></i>
                         {% else %}
-                            <i class="fas fa-question"></i>
+                            <i class="fas fa-question me-1"></i>
                         {% endif %}
                         {{ product.get_material_display }}
                     </span>
                 </div>
+
+                <!-- Stock Info -->
+                {% if product.stock > 0 %}
+                    <small class="text-success">
+                        <i class="fas fa-check-circle me-1"></i>{{ product.stock }} in stock
+                    </small>
+                {% else %}
+                    <small class="text-danger">
+                        <i class="fas fa-times-circle me-1"></i>Out of stock
+                    </small>
+                {% endif %}
             </div>
 
-            <div class="product-footer">
-                <div class="price-section">
-                    <span class="product-price">{{ product.display_price }}</span>
-                    {% if product.stock > 0 %}
-                    <span class="stock-info">
-                        <i class="fas fa-boxes"></i>{{ product.stock }} in stock
-                    </span>
-                    {% endif %}
+            <!-- Price and Actions -->
+            <div class="mt-auto">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="text-primary fw-bold mb-0">{{ product.display_price }}</h4>
                 </div>
 
-                <div class="action-buttons">
-                    {% if product.stock > 0 %}
-                    <button class="btn add-to-cart-btn" data-product-id="{{ product.id }}">
-                        <i class="fas fa-cart-plus"></i>Add to Cart
+                {% if product.stock > 0 %}
+                    <button class="btn btn-primary w-100" onclick="addToCart({{ product.id }})">
+                        <i class="fas fa-cart-plus me-1"></i>Add to Cart
                     </button>
-                    {% else %}
-                    <span class="stock-badge out-of-stock">
-                        <i class="fas fa-times-circle"></i>Out of Stock
-                    </span>
-                    {% endif %}
-                </div>
+                {% else %}
+                    <button class="btn btn-outline-secondary w-100" disabled>
+                        <i class="fas fa-times-circle me-1"></i>Out of Stock
+                    </button>
+                {% endif %}
             </div>
         </div>
-    </a>
-</article>
+    </div>
+</div>

@@ -8,39 +8,60 @@ from django.db import transaction
 from django.core.paginator import Paginator
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.views.generic import TemplateView, DetailView, ListView
 from django.conf import settings
 from decimal import Decimal
+from rest_framework import generics, status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
 from cart.models import Cart, CartItem
 from .models import Order, OrderItem
 from .forms import CheckoutForm
+from .serializers import (
+    OrderSerializer, OrderListSerializer,
+    OrderCreateSerializer, OrderItemSerializer
+)
 from django.views.decorators.http import require_POST
 import logging
 import stripe
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('orders')
+api_logger = logging.getLogger('api')
 
 # Constants
 DEFAULT_SHIPPING_COST = Decimal('5.00')
 TAX_RATE = Decimal('0.08')  # 8%
 stripe.api_key = settings.STRIPE_SECRET_KEY
-@login_required
-@login_required
 def checkout(request):
     """Handle the checkout process and order creation."""
-    logger.info(f"Checkout process initiated for user {request.user.id}")
-    
-    try:
-        cart = Cart.objects.get(user=request.user)
-        logger.info(f"Cart found with {cart.total_items} items (ID: {cart.id})")
-    except Cart.DoesNotExist:
-        logger.warning(f"No cart found for user {request.user.id}")
-        messages.error(request, "Your shopping cart was not found")
-        return redirect('home:index')
+    from cart.cart import CartSession
+
+    # Get cart for authenticated or anonymous users
+    if request.user.is_authenticated:
+        try:
+            cart = Cart.objects.get(user=request.user)
+            logger.info(f"Cart found with {cart.total_items} items (ID: {cart.id})")
+        except Cart.DoesNotExist:
+            logger.warning(f"No cart found for user {request.user.id}")
+            messages.error(request, "Your shopping cart was not found")
+            return redirect('home:index')
+    else:
+        cart = CartSession(request)
+        logger.info(f"Session cart found with {cart.total_items} items")
 
     if cart.total_items == 0:
         logger.warning("Empty cart detected during checkout")
         messages.warning(request, "Your cart is empty")
         return redirect('cart:cart_detail')
+
+    # For anonymous users, require login before checkout
+    if not request.user.is_authenticated:
+        messages.info(request, "Please log in or create an account to complete your purchase.")
+        return redirect(f"{settings.LOGIN_URL}?next={request.path}")
 
     if request.method == 'POST':
         form = CheckoutForm(request.POST, user=request.user)
@@ -49,7 +70,7 @@ def checkout(request):
             if not request.POST.get('agree_terms'):
                 messages.error(request, "You must accept the terms and conditions")
                 return redirect('orders:checkout')
-                
+
             try:
                 with transaction.atomic():
                     # Create and validate order
@@ -59,22 +80,31 @@ def checkout(request):
                     order.shipping_cost = DEFAULT_SHIPPING_COST
                     order.tax = (cart.subtotal * TAX_RATE).quantize(Decimal('0.01'))
                     order.total = (order.subtotal + order.shipping_cost + order.tax).quantize(Decimal('0.01'))
-                    
+
                     # Validate payment method
                     payment_method = form.cleaned_data.get('payment_method')
                     if payment_method not in dict(Order.PAYMENT_CHOICES).keys():
                         raise ValueError("Invalid payment method selected")
-                    
+
                     order.save()
-                    
-                    # Create order items
-                    for cart_item in cart.items.all():
-                        OrderItem.objects.create(
-                            order=order,
-                            product=cart_item.product,
-                            quantity=cart_item.quantity,
-                            price=cart_item.product.price
-                        )
+
+                    # Create order items - handle both cart types
+                    if hasattr(cart, 'items'):  # Database cart
+                        for cart_item in cart.items.all():
+                            OrderItem.objects.create(
+                                order=order,
+                                product=cart_item.product,
+                                quantity=cart_item.quantity,
+                                price=cart_item.product.price
+                            )
+                    else:  # Session cart
+                        for item in cart:
+                            OrderItem.objects.create(
+                                order=order,
+                                product=item['product'],
+                                quantity=item['quantity'],
+                                price=item['product'].price
+                            )
 
                     # Process payment based on selected method
                     if payment_method == 'credit_card':
@@ -244,50 +274,100 @@ def process_order(request, cart, form):
         logger.info(f"Order {order.order_number} created successfully")
         return redirect('orders:order_confirmation', order_id=order.id)
 
+class OrderConfirmationView(DetailView):
+    """Class-based view for order confirmation page."""
+    model = Order
+    template_name = 'orders/confirmation.html'
+    context_object_name = 'order'
+
+    def get_queryset(self):
+        """Only show orders for the current user."""
+        return Order.objects.filter(user=self.request.user)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        order = self.get_object()
+        context['title'] = f'Order Confirmation #{order.order_number}'
+        return context
+
+
+class OrderHistoryView(ListView):
+    """Class-based view for order history."""
+    model = Order
+    template_name = 'orders/history.html'
+    context_object_name = 'page_obj'
+    paginate_by = 10
+
+    def get_queryset(self):
+        """Only show orders for the current user."""
+        return Order.objects.filter(user=self.request.user).order_by('-created_at')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Order History'
+        return context
+
+
+class OrderDetailView(DetailView):
+    """Class-based view for order details."""
+    model = Order
+    template_name = 'orders/detail.html'
+    context_object_name = 'order'
+
+    def get_queryset(self):
+        """Only show orders for the current user."""
+        return Order.objects.filter(user=self.request.user)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        order = self.get_object()
+        context['title'] = f'Order Details #{order.order_number}'
+        context['active_statuses'] = ['processing', 'shipped', 'delivered']
+        context['shipped_statuses'] = ['shipped', 'delivered']
+        return context
+
+
+class OrderInvoiceView(DetailView):
+    """Class-based view for order invoice."""
+    model = Order
+    template_name = 'orders/invoice.html'
+    context_object_name = 'order'
+
+    def get_queryset(self):
+        """Only show orders for the current user."""
+        return Order.objects.filter(user=self.request.user)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        order = self.get_object()
+        context['title'] = f'Invoice #{order.order_number}'
+        return context
+
+
+# Legacy function-based views for backward compatibility
+@login_required
 def order_confirmation(request, order_id):
-    """Display order confirmation page."""
-    order = get_object_or_404(Order, id=order_id, user=request.user)
-    context = {
-        'title': f'Order Confirmation #{order.order_number}',
-        'order': order,
-    }
-    return render(request, 'orders/confirmation.html', context)
+    """Legacy function-based view for order confirmation."""
+    view = OrderConfirmationView.as_view()
+    return view(request, pk=order_id)
 
 @login_required
 def order_history(request):
-    """Display paginated order history for the user."""
-    orders = Order.objects.filter(user=request.user).order_by('-created_at')
-    paginator = Paginator(orders, 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    
-    context = {
-        'title': 'Order History',
-        'page_obj': page_obj,
-    }
-    return render(request, 'orders/history.html', context)
+    """Legacy function-based view for order history."""
+    view = OrderHistoryView.as_view()
+    return view(request)
 
 @login_required
 def order_detail(request, order_id):
-    """Display detailed order information."""
-    order = get_object_or_404(Order, id=order_id, user=request.user)
-    context = {
-        'title': f'Order Details #{order.order_number}',
-        'order': order,
-        'active_statuses': ['processing', 'shipped', 'delivered'],
-        'shipped_statuses': ['shipped', 'delivered'],
-    }
-    return render(request, 'orders/detail.html', context)
+    """Legacy function-based view for order detail."""
+    view = OrderDetailView.as_view()
+    return view(request, pk=order_id)
 
 @login_required
 def order_invoice(request, order_id):
-    """Generate order invoice."""
-    order = get_object_or_404(Order, id=order_id, user=request.user)
-    context = {
-        'title': f'Invoice #{order.order_number}',
-        'order': order,
-    }
-    return render(request, 'orders/invoice.html', context)
+    """Legacy function-based view for order invoice."""
+    view = OrderInvoiceView.as_view()
+    return view(request, pk=order_id)
 
 @login_required
 @require_POST
@@ -442,8 +522,108 @@ def send_order_cancellation(order):
     )
     logger.info(f"Cancellation email sent for order {order.order_number}")
     
+class TermsAndConditionsView(TemplateView):
+    """Class-based view for terms and conditions page."""
+    template_name = 'orders/legal/terms.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = 'Terms and Conditions'
+        return context
+
+
 def terms_and_conditions(request):
-    context = {
-        'title': 'Terms and Conditions'
-    }
-    return render(request, 'orders/legal/terms.html', context)
+    """Legacy function-based view for backward compatibility."""
+    view = TermsAndConditionsView.as_view()
+    return view(request)
+
+
+# API Views
+class OrderPagination(PageNumberPagination):
+    """Custom pagination for orders."""
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 50
+
+
+class OrderListAPIView(generics.ListCreateAPIView):
+    """API view for listing and creating orders."""
+    serializer_class = OrderListSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = OrderPagination
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.SearchFilter,
+        filters.OrderingFilter
+    ]
+    filterset_fields = ['status', 'payment_status']
+    search_fields = ['order_number']
+    ordering_fields = ['created_at', 'updated_at', 'total']
+    ordering = ['-created_at']
+
+    def get_queryset(self):
+        """Return orders for the current user."""
+        return Order.objects.filter(user=self.request.user)
+
+    def get_serializer_class(self):
+        """Use different serializer for create vs list."""
+        if self.request.method == 'POST':
+            return OrderCreateSerializer
+        return OrderListSerializer
+
+    def perform_create(self, serializer):
+        """Create order for the current user."""
+        serializer.save(user=self.request.user)
+
+
+class OrderDetailAPIView(generics.RetrieveUpdateAPIView):
+    """API view for retrieving and updating orders."""
+    serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'order_number'
+
+    def get_queryset(self):
+        """Return orders for the current user."""
+        return Order.objects.filter(user=self.request.user)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def cancel_order_api(request, order_number):
+    """API endpoint for cancelling orders."""
+    try:
+        order = Order.objects.get(
+            order_number=order_number,
+            user=request.user
+        )
+
+        if order.status not in ['pending', 'processing']:
+            return Response(
+                {'error': 'Order cannot be cancelled at this stage'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Cancel order logic (similar to existing cancel_order view)
+        order.status = 'cancelled'
+        order.save()
+
+        serializer = OrderSerializer(order)
+        return Response(serializer.data)
+
+    except Order.DoesNotExist:
+        return Response(
+            {'error': 'Order not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def order_history_api(request):
+    """API endpoint for order history."""
+    orders = Order.objects.filter(user=request.user).order_by('-created_at')
+    paginator = OrderPagination()
+    paginated_orders = paginator.paginate_queryset(orders, request)
+    serializer = OrderListSerializer(paginated_orders, many=True, context={'request': request})
+
+    return paginator.get_paginated_response(serializer.data)
