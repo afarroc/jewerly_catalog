@@ -9,6 +9,9 @@ from .settings import *
 DEBUG = False
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'yourdomain.com,www.yourdomain.com').split(',')
 
+# Debug ALLOWED_HOSTS
+print(f"[HOSTS] ALLOWED_HOSTS: {ALLOWED_HOSTS}")
+
 # Database - Use DATABASE_URL for production (Render standard)
 if os.getenv('DATABASE_URL'):
     import dj_database_url
@@ -57,6 +60,17 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 
 # Static files served by WhiteNoise
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Static files configuration
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Debug static files configuration
+print(f"[STATIC] STATIC_URL: {STATIC_URL}")
+print(f"[STATIC] STATICFILES_DIRS: {STATICFILES_DIRS}")
+print(f"[STATIC] STATIC_ROOT: {STATIC_ROOT}")
+print(f"[STATIC] STATICFILES_STORAGE: {STATICFILES_STORAGE}")
 
 # Security settings
 SECURE_SSL_REDIRECT = True
