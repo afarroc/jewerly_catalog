@@ -67,7 +67,13 @@ mkdir -p staticfiles
 # Ejecutar collectstatic con opciones optimizadas
 echo "Ejecutando collectstatic..."
 echo "Comando: python3 manage.py collectstatic --noinput --clear --verbosity=1"
-python3 manage.py collectstatic --noinput --clear --verbosity=1
+
+# Limpiar staticfiles completamente antes de collectstatic para forzar copia de banners
+echo "🧹 Limpiando staticfiles completamente..."
+rm -rf staticfiles/*
+mkdir -p staticfiles
+
+python3 manage.py collectstatic --noinput --verbosity=1
 
 # Verificar el código de salida de collectstatic
 COLLECTSTATIC_EXIT_CODE=$?
@@ -146,11 +152,6 @@ echo "Collectstatic exit code: $COLLECTSTATIC_EXIT_CODE"
 
 echo "✅ Collectstatic completado - archivos estáticos listos para producción"
 echo "🎯 Los banners deberían cargar correctamente ahora"
-else
-    echo "Modo desarrollo: Saltando collectstatic (DEBUG=True)"
-    echo "💡 En desarrollo, los archivos estáticos se sirven desde $(pwd)/static"
-    echo "💡 Para probar collectstatic en desarrollo: python manage.py collectstatic"
-fi
 
 # Crear usuario administrador
 echo "Creando usuario administrador..."
