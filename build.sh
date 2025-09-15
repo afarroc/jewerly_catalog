@@ -70,14 +70,25 @@ echo "Comando: python3 manage.py collectstatic --noinput --clear --verbosity=1"
 
 # Limpiar staticfiles completamente antes de collectstatic para forzar copia de banners
 echo "🧹 Limpiando staticfiles completamente..."
-rm -rf staticfiles/*
+echo "Contenido antes de limpiar:"
+ls -la staticfiles/ 2>/dev/null || echo "staticfiles no existe o está vacío"
+
+# Forzar eliminación completa
+rm -rf staticfiles
 mkdir -p staticfiles
+
+echo "Contenido después de limpiar:"
+ls -la staticfiles/
 
 python3 manage.py collectstatic --noinput --verbosity=1
 
 # Verificar el código de salida de collectstatic
 COLLECTSTATIC_EXIT_CODE=$?
 echo "Collectstatic exit code: $COLLECTSTATIC_EXIT_CODE"
+
+# Verificar inmediatamente qué se copió
+echo "Contenido de staticfiles inmediatamente después de collectstatic:"
+find staticfiles -name "*.jpg" -o -name "banner*" | head -10
 
     # Verificar resultado
     if [ -d "staticfiles" ]; then
