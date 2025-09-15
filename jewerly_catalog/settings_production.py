@@ -72,6 +72,17 @@ print(f"[STATIC] STATICFILES_DIRS: {STATICFILES_DIRS}")
 print(f"[STATIC] STATIC_ROOT: {STATIC_ROOT}")
 print(f"[STATIC] STATICFILES_STORAGE: {STATICFILES_STORAGE}")
 
+# Verify banners exist in static directory
+banners_dir = os.path.join(BASE_DIR, 'static', 'images', 'banners')
+if os.path.exists(banners_dir):
+    banner_files = os.listdir(banners_dir)
+    print(f"[BANNERS] Found banner files: {banner_files}")
+    for banner_file in banner_files:
+        banner_path = os.path.join(banners_dir, banner_file)
+        print(f"[BANNERS] {banner_file}: exists={os.path.exists(banner_path)}")
+else:
+    print(f"[BANNERS] ERROR: Banners directory not found at {banners_dir}")
+
 # Security settings
 SECURE_SSL_REDIRECT = True
 SECURE_HSTS_SECONDS = 31536000  # 1 year
