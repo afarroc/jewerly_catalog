@@ -36,8 +36,13 @@ python3 manage.py migrate --noinput
 
 # Recolectar archivos estáticos (solo en producción)
 echo "Procesando archivos estáticos..."
+echo "DEBUG variable: '$DEBUG'"
+echo "Current working directory: $(pwd)"
+echo "Python path: $PYTHONPATH"
+echo "Django settings module: $DJANGO_SETTINGS_MODULE"
+
 if [ "$DEBUG" = "False" ] || [ "$DEBUG" = "false" ] || [ -z "$DEBUG" ]; then
-    echo "Modo producción: Ejecutando collectstatic con compresión..."
+    echo "✅ Modo producción detectado: Ejecutando collectstatic con compresión..."
 
     # Verificar que el directorio static existe y tiene archivos
     if [ -d "static" ]; then
@@ -60,7 +65,12 @@ if [ "$DEBUG" = "False" ] || [ "$DEBUG" = "false" ] || [ -z "$DEBUG" ]; then
 
     # Ejecutar collectstatic con opciones optimizadas
     echo "Ejecutando collectstatic..."
+    echo "Comando: python3 manage.py collectstatic --noinput --clear --verbosity=1"
     python3 manage.py collectstatic --noinput --clear --verbosity=1
+
+    # Verificar el código de salida de collectstatic
+    COLLECTSTATIC_EXIT_CODE=$?
+    echo "Collectstatic exit code: $COLLECTSTATIC_EXIT_CODE"
 
     # Verificar resultado
     if [ -d "staticfiles" ]; then
@@ -80,17 +90,40 @@ if [ "$DEBUG" = "False" ] || [ "$DEBUG" = "false" ] || [ -z "$DEBUG" ]; then
             echo "✅ Archivos CSS y JS del proyecto incluidos"
         fi
 
+        # Verificar banners específicamente
+        if [ -d "staticfiles/static/images/banners" ]; then
+            BANNER_COUNT=$(find staticfiles/static/images/banners -type f | wc -l)
+            echo "✅ Banners encontrados: $BANNER_COUNT archivos"
+            ls -la staticfiles/static/images/banners/
+        else
+            echo "❌ ERROR: Directorio de banners no encontrado en staticfiles"
+        fi
+
         # Mostrar archivos generados
         echo "Archivos generados en staticfiles:"
         find staticfiles -name "*.css" | wc -l | sed 's/^/  CSS: /'
         find staticfiles -name "*.js" | wc -l | sed 's/^/  JS: /'
         find staticfiles -type f \( -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.svg" \) | wc -l | sed 's/^/  Imágenes: /'
 
+        # Listar estructura de staticfiles
+        echo "Estructura de staticfiles:"
+        find staticfiles -type d | head -10
+
+        # Verificar permisos
+        echo "Permisos del directorio staticfiles:"
+        ls -la staticfiles/
+
     else
         echo "❌ Error: Directorio staticfiles no creado"
         echo "Revisa la configuración de STATIC_ROOT en settings.py"
         exit 1
     fi
+else
+    echo "⚠️  Modo desarrollo detectado: Saltando collectstatic"
+    echo "💡 DEBUG='$DEBUG'"
+    echo "💡 En desarrollo, los archivos estáticos se sirven desde $(pwd)/static"
+    echo "💡 Para probar collectstatic en desarrollo: python manage.py collectstatic"
+fi
 else
     echo "Modo desarrollo: Saltando collectstatic (DEBUG=True)"
     echo "💡 En desarrollo, los archivos estáticos se sirven desde $(pwd)/static"
