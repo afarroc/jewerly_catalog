@@ -34,43 +34,44 @@ echo "Ejecutando migraciones de base de datos..."
 python3 manage.py makemigrations --noinput
 python3 manage.py migrate --noinput
 
-# Recolectar archivos estáticos (solo en producción)
+# Recolectar archivos estáticos (FORZAR en producción)
 echo "Procesando archivos estáticos..."
 echo "DEBUG variable: '$DEBUG'"
 echo "Current working directory: $(pwd)"
 echo "Python path: $PYTHONPATH"
 echo "Django settings module: $DJANGO_SETTINGS_MODULE"
 
-if [ "$DEBUG" = "False" ] || [ "$DEBUG" = "false" ] || [ -z "$DEBUG" ]; then
-    echo "✅ Modo producción detectado: Ejecutando collectstatic con compresión..."
+# FORZAR ejecución de collectstatic en Render (producción)
+echo "🔧 FORZANDO ejecución de collectstatic en producción..."
+echo "✅ Ejecutando collectstatic con compresión..."
 
-    # Verificar que el directorio static existe y tiene archivos
-    if [ -d "static" ]; then
-        STATIC_SOURCE_COUNT=$(find static -type f | wc -l)
-        echo "Directorio static encontrado con $STATIC_SOURCE_COUNT archivos"
+# Verificar que el directorio static existe y tiene archivos
+if [ -d "static" ]; then
+    STATIC_SOURCE_COUNT=$(find static -type f | wc -l)
+    echo "Directorio static encontrado con $STATIC_SOURCE_COUNT archivos"
 
-        # Mostrar archivos encontrados
-        echo "Archivos estáticos encontrados:"
-        find static -type f -name "*.css" | head -5 | sed 's/^/  CSS: /'
-        find static -type f -name "*.js" | head -5 | sed 's/^/  JS: /'
-        find static -type f -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.svg" | head -5 | sed 's/^/  IMG: /'
-    else
-        echo "❌ Error: Directorio static no encontrado"
-        echo "Asegúrate de que los archivos estáticos estén en el directorio 'static/'"
-        exit 1
-    fi
+    # Mostrar archivos encontrados
+    echo "Archivos estáticos encontrados:"
+    find static -type f -name "*.css" | head -5 | sed 's/^/  CSS: /'
+    find static -type f -name "*.js" | head -5 | sed 's/^/  JS: /'
+    find static -type f -name "*.png" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.gif" -o -name "*.svg" | head -5 | sed 's/^/  IMG: /'
+else
+    echo "❌ Error: Directorio static no encontrado"
+    echo "Asegúrate de que los archivos estáticos estén en el directorio 'static/'"
+    exit 1
+fi
 
-    # Crear directorio staticfiles si no existe
-    mkdir -p staticfiles
+# Crear directorio staticfiles si no existe
+mkdir -p staticfiles
 
-    # Ejecutar collectstatic con opciones optimizadas
-    echo "Ejecutando collectstatic..."
-    echo "Comando: python3 manage.py collectstatic --noinput --clear --verbosity=1"
-    python3 manage.py collectstatic --noinput --clear --verbosity=1
+# Ejecutar collectstatic con opciones optimizadas
+echo "Ejecutando collectstatic..."
+echo "Comando: python3 manage.py collectstatic --noinput --clear --verbosity=1"
+python3 manage.py collectstatic --noinput --clear --verbosity=1
 
-    # Verificar el código de salida de collectstatic
-    COLLECTSTATIC_EXIT_CODE=$?
-    echo "Collectstatic exit code: $COLLECTSTATIC_EXIT_CODE"
+# Verificar el código de salida de collectstatic
+COLLECTSTATIC_EXIT_CODE=$?
+echo "Collectstatic exit code: $COLLECTSTATIC_EXIT_CODE"
 
     # Verificar resultado
     if [ -d "staticfiles" ]; then
@@ -113,17 +114,38 @@ if [ "$DEBUG" = "False" ] || [ "$DEBUG" = "false" ] || [ -z "$DEBUG" ]; then
         echo "Permisos del directorio staticfiles:"
         ls -la staticfiles/
 
+        # Verificación FINAL de banners
+        echo "🔍 VERIFICACIÓN FINAL DE BANNERS:"
+        if [ -d "staticfiles/static/images/banners" ]; then
+            BANNER_FINAL_COUNT=$(find staticfiles/static/images/banners -type f | wc -l)
+            echo "✅ Banners en staticfiles: $BANNER_FINAL_COUNT archivos"
+            ls -la staticfiles/static/images/banners/
+
+            # Verificar archivos específicos
+            if [ -f "staticfiles/static/images/banners/banner.jpg" ]; then
+                echo "✅ banner.jpg: COPIADO correctamente"
+            else
+                echo "❌ banner.jpg: NO se copió"
+            fi
+
+            if [ -f "staticfiles/static/images/banners/banner1.jpg" ]; then
+                echo "✅ banner1.jpg: COPIADO correctamente"
+            else
+                echo "❌ banner1.jpg: NO se copió"
+            fi
+        else
+            echo "❌ ERROR CRÍTICO: Directorio de banners NO existe en staticfiles"
+            echo "Esto causará que los banners no se carguen en producción"
+        fi
+
     else
         echo "❌ Error: Directorio staticfiles no creado"
         echo "Revisa la configuración de STATIC_ROOT en settings.py"
         exit 1
     fi
-else
-    echo "⚠️  Modo desarrollo detectado: Saltando collectstatic"
-    echo "💡 DEBUG='$DEBUG'"
-    echo "💡 En desarrollo, los archivos estáticos se sirven desde $(pwd)/static"
-    echo "💡 Para probar collectstatic en desarrollo: python manage.py collectstatic"
-fi
+
+echo "✅ Collectstatic completado - archivos estáticos listos para producción"
+echo "🎯 Los banners deberían cargar correctamente ahora"
 else
     echo "Modo desarrollo: Saltando collectstatic (DEBUG=True)"
     echo "💡 En desarrollo, los archivos estáticos se sirven desde $(pwd)/static"
