@@ -23,8 +23,8 @@ class OrderItemSerializer(serializers.ModelSerializer):
         if obj.product.image:
             request = self.context.get('request')
             if request:
-                return request.build_absolute_uri(obj.product.image.url)
-            return obj.product.image.url
+                return request.build_absolute_uri(obj.product.get_image_url)
+            return obj.product.get_image_url
         return None
 
 

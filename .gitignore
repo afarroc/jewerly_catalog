@@ -113,3 +113,6 @@ logs/
 .vscode/
 *.swp
 *.swo
+
+# Raw images folder
+static/images/raw/

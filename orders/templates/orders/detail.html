@@ -127,7 +127,7 @@
                         <div class="order-item">
                             <div class="item-image">
                                 {% if item.product.image %}
-                                <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                                <img src="{{ item.product.get_image_url }}" alt="{{ item.product.name }}">
                                 {% endif %}
                             </div>
                             <div class="item-details">

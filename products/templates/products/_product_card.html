@@ -18,7 +18,7 @@
         <!-- Product Image -->
         <div class="position-relative">
             {% if product.image %}
-                <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+                <img src="{{ product.get_image_url }}" class="card-img-top" alt="{{ product.name }}">
                 <div class="card-img-overlay d-flex align-items-center justify-content-center">
                     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#quickViewModal"
                             onclick="loadQuickView({{ product.id }})">

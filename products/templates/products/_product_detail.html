@@ -25,11 +25,11 @@
             <div class="product-gallery">
                 <div class="main-image-container">
                     {% if product.image %}
-                    <img src="{{ product.image.url }}" alt="{{ product.name }}" class="main-image" id="main-product-image">
+                    <img src="{{ product.get_image_url }}" alt="{{ product.name }}" class="main-image" id="main-product-image">
 
                     <!-- Image Overlay Actions -->
                     <div class="image-overlay-actions">
-                        <button class="image-action-btn" onclick="openImageModal('{{ product.image.url }}')" title="Zoom">
+                        <button class="image-action-btn" onclick="openImageModal('{{ product.get_image_url }}')" title="Zoom">
                             <i class="fas fa-search-plus"></i>
                         </button>
                         {% if product.stock > 0 %}
@@ -58,8 +58,8 @@
                 <!-- Thumbnail Gallery (placeholder for future multiple images) -->
                 <div class="thumbnail-gallery">
                     {% if product.image %}
-                    <div class="thumbnail-item active" data-image="{{ product.image.url }}">
-                        <img src="{{ product.image.url }}" alt="Thumbnail 1">
+                    <div class="thumbnail-item active" data-image="{{ product.get_image_url }}">
+                        <img src="{{ product.get_image_url }}" alt="Thumbnail 1">
                     </div>
                     {% else %}
                     <div class="thumbnail-placeholder">

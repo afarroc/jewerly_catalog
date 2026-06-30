@@ -79,11 +79,10 @@ class Product(models.Model):
     available = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    image = models.ImageField(
-        upload_to='products/',
+    image = models.TextField(
         blank=True,
         null=True,
-        help_text='Formatos permitidos: JPG, PNG, GIF. Tamaño máximo recomendado: 2MB'
+        help_text='Cloudinary URL or image path'
     )
 
     class Meta:
@@ -103,6 +102,13 @@ class Product(models.Model):
     def display_price(self):
         """Format price for display with currency symbol."""
         return f"S/. {self.price:.2f}"
+
+    @property
+    def get_image_url(self):
+        """Return image URL for display - supports Cloudinary URLs or local paths."""
+        if not self.image:
+            return '/static/images/placeholder-product.jpg'
+        return self.image
 
 
 class ImageUpload(models.Model):

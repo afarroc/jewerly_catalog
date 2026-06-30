@@ -51,7 +51,7 @@
                                 {% for item in order.items.all|slice:":3" %}
                                 <div class="product">
                                     {% if item.product.image %}
-                                    <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                                    <img src="{{ item.product.get_image_url }}" alt="{{ item.product.name }}">
                                     {% endif %}
                                     <span>{{ item.quantity }} × {{ item.product.name }}</span>
                                 </div>

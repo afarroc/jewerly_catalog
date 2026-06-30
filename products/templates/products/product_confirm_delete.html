@@ -20,7 +20,7 @@
                         <div class="card-body">
                             <h5 class="card-title">{{ product.name }}</h5>
                             {% if product.image %}
-                                <img src="{{ product.image.url }}" alt="{{ product.name }}"
+                                <img src="{{ product.get_image_url }}" alt="{{ product.name }}"
                                      class="img-fluid mb-2" style="max-height: 200px;">
                             {% endif %}
                             <p class="card-text mb-1"><strong>Precio:</strong> {{ product.display_price }}</p>
