@@ -100,19 +100,19 @@ find staticfiles -name "*.jpg" -o -name "banner*" | head -10
         echo "📍 Ubicación: $(pwd)/staticfiles"
 
         # Verificar que se crearon los archivos principales
-        if [ -f "staticfiles/static/admin/css/base.css" ]; then
+        if [ -f "staticfiles/admin/css/base.css" ]; then
             echo "✅ Archivos de Django Admin incluidos"
         fi
 
-        if [ -d "staticfiles/static/css" ] && [ -d "staticfiles/static/js" ]; then
+        if [ -d "staticfiles/css" ] && [ -d "staticfiles/js" ]; then
             echo "✅ Archivos CSS y JS del proyecto incluidos"
         fi
 
         # Verificar banners específicamente
-        if [ -d "staticfiles/static/images/banners" ]; then
-            BANNER_COUNT=$(find staticfiles/static/images/banners -type f | wc -l)
+        if [ -d "staticfiles/images/banners" ]; then
+            BANNER_COUNT=$(find staticfiles/images/banners -type f | wc -l)
             echo "✅ Banners encontrados: $BANNER_COUNT archivos"
-            ls -la staticfiles/static/images/banners/
+            ls -la staticfiles/images/banners/
         else
             echo "❌ ERROR: Directorio de banners no encontrado en staticfiles"
         fi
@@ -133,19 +133,19 @@ find staticfiles -name "*.jpg" -o -name "banner*" | head -10
 
         # Verificación FINAL de banners
         echo "🔍 VERIFICACIÓN FINAL DE BANNERS:"
-        if [ -d "staticfiles/static/images/banners" ]; then
-            BANNER_FINAL_COUNT=$(find staticfiles/static/images/banners -type f | wc -l)
+        if [ -d "staticfiles/images/banners" ]; then
+            BANNER_FINAL_COUNT=$(find staticfiles/images/banners -type f | wc -l)
             echo "✅ Banners en staticfiles: $BANNER_FINAL_COUNT archivos"
-            ls -la staticfiles/static/images/banners/
+            ls -la staticfiles/images/banners/
 
             # Verificar archivos específicos
-            if [ -f "staticfiles/static/images/banners/banner.jpg" ]; then
+            if [ -f "staticfiles/images/banners/banner.jpg" ]; then
                 echo "✅ banner.jpg: COPIADO correctamente"
             else
                 echo "❌ banner.jpg: NO se copió"
             fi
 
-            if [ -f "staticfiles/static/images/banners/banner1.jpg" ]; then
+            if [ -f "staticfiles/images/banners/banner1.jpg" ]; then
                 echo "✅ banner1.jpg: COPIADO correctamente"
             else
                 echo "❌ banner1.jpg: NO se copió"
