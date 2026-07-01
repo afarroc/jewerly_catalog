@@ -112,7 +112,7 @@ if os.getenv('DATABASE_URL'):
         if 'ssl-mode' in DATABASES['default']['OPTIONS']:
             del DATABASES['default']['OPTIONS']['ssl-mode']
         if DATABASES['default'].get('ENGINE') == 'django.db.backends.mysql':
-            DATABASES['default']['OPTIONS']['ssl'] = True
+            DATABASES['default']['OPTIONS']['ssl'] = {}
 else:
     # Base de datos MySQL para desarrollo local
     DATABASES = {
