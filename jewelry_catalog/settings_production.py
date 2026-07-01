@@ -1,5 +1,5 @@
 """
-Production settings for jewerly catalog application.
+Production settings for jewelry catalog application.
 This file contains production-specific configurations.
 """
 import os
@@ -27,7 +27,7 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('DB_NAME', 'jewerly_catalog'),
+            'NAME': os.getenv('DB_NAME', 'jewelry_catalog'),
             'USER': os.getenv('DB_USER', 'postgres'),
             'PASSWORD': os.getenv('DB_PASSWORD', ''),
             'HOST': os.getenv('DB_HOST', 'localhost'),

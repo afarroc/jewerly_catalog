@@ -7,7 +7,7 @@ import sys
 import django
 
 # Configurar Django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'jewerly_catalog.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'jewelry_catalog.settings')
 django.setup()
 
 from django.contrib.auth import get_user_model
@@ -20,7 +20,7 @@ def create_admin_user():
     from accounts.models import User
 
     # Obtener credenciales de variables de entorno
-    admin_email = os.getenv('ADMIN_EMAIL', 'admin@jewerlycatalog.com')
+    admin_email = os.getenv('ADMIN_EMAIL', 'admin@jewelrycatalog.com')
     admin_password = os.getenv('ADMIN_PASSWORD', 'admin123')
 
     # Verificar si el usuario ya existe

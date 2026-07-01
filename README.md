@@ -29,7 +29,7 @@ Catálogo de joyería desarrollado con Django para venta en línea.
 1. Clona el repositorio:
 ```bash
 git clone <url-del-repositorio>
-cd jewerly_catalog
+cd jewelry_catalog
 ```
 
 2. Crea un entorno virtual:
@@ -358,7 +358,7 @@ El sitio está completamente optimizado para todos los dispositivos:
 ## Estructura del Proyecto
 
 ```
-jewerly_catalog/
+jewelry_catalog/
 ├── accounts/          # Gestión de usuarios
 ├── cart/             # Carrito de compras
 ├── home/             # Página principal
@@ -366,7 +366,7 @@ jewerly_catalog/
 ├── products/         # Gestión de productos
 ├── static/           # Archivos estáticos optimizados
 ├── templates/        # Plantillas HTML responsive
-├── jewerly_catalog/  # Configuración principal
+├── jewelry_catalog/  # Configuración principal
 ├── manage.py
 ├── requirements.txt
 ├── Procfile

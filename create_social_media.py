@@ -7,7 +7,7 @@ import os
 import django
 
 # Configurar Django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'jewerly_catalog.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'jewelry_catalog.settings')
 django.setup()
 
 from home.models import SocialMedia

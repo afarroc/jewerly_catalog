@@ -18,7 +18,7 @@ python -c "import pymysql; print('PyMySQL OK')"
 
 # Configurar variables de entorno para desarrollo
 echo "Configurando entorno de desarrollo..."
-export DJANGO_SETTINGS_MODULE=jewerly_catalog.settings
+export DJANGO_SETTINGS_MODULE=jewelry_catalog.settings
 export DEBUG=True
 export PYTHONPATH=$PYTHONPATH:$(pwd)
 

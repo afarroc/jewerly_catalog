@@ -15,7 +15,7 @@ python test_env.py
 
 #### Opción A: Dashboard de Render (Recomendado)
 1. Ve a [dashboard.render.com](https://dashboard.render.com)
-2. Selecciona tu servicio **jewerly-catalog**
+2. Selecciona tu servicio **jewelry-catalog**
 3. Ve a la pestaña **"Environment"**
 4. Haz clic en **"Add Environment Variable"**
 5. Agrega estas variables:
@@ -65,7 +65,7 @@ python manage.py runserver
 ```bash
 # En el dashboard → Service → Logs
 # O usando CLI:
-render logs --app jewerly-catalog-kpoy
+render logs --app jewelry-catalog-kpoy
 ```
 
 ### Logs Esperados Después de la Configuración:

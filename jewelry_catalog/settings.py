@@ -1,5 +1,5 @@
 """
-Django settings for jewerly_catalog project.
+Django settings for jewelry_catalog project.
 """
 
 import os
@@ -65,13 +65,13 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
     # Custom monitoring middleware
-    'jewerly_catalog.middleware.PerformanceMonitoringMiddleware',
-    'jewerly_catalog.middleware.CacheMonitoringMiddleware',
-    'jewerly_catalog.middleware.SecurityMonitoringMiddleware',
-    'jewerly_catalog.middleware.RequestLoggingMiddleware',
+    'jewelry_catalog.middleware.PerformanceMonitoringMiddleware',
+    'jewelry_catalog.middleware.CacheMonitoringMiddleware',
+    'jewelry_catalog.middleware.SecurityMonitoringMiddleware',
+    'jewelry_catalog.middleware.RequestLoggingMiddleware',
 ]
 
-ROOT_URLCONF = 'jewerly_catalog.urls'
+ROOT_URLCONF = 'jewelry_catalog.urls'
 
 # =======================
 # Templates
@@ -95,7 +95,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'jewerly_catalog.wsgi.application'
+WSGI_APPLICATION = 'jewelry_catalog.wsgi.application'
 
 # =======================
 # Database
@@ -151,7 +151,7 @@ EMAIL_PORT = os.getenv('EMAIL_PORT', 587)
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Fantasy Jewerly <noreply@fantasyjewerly.com>')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Fantasy Jewerly <noreply@fantasyjewelry.com>')
 
 # =======================
 # Internationalization
@@ -336,7 +336,7 @@ CACHES = {
 # Cache settings for different types of data
 CACHE_MIDDLEWARE_ALIAS = 'default'
 CACHE_MIDDLEWARE_SECONDS = 600  # 10 minutes
-CACHE_MIDDLEWARE_KEY_PREFIX = 'jewerly_catalog'
+CACHE_MIDDLEWARE_KEY_PREFIX = 'jewelry_catalog'
 
 # =======================
 # REST Framework Configuration

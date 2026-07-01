@@ -1,5 +1,5 @@
 """
-WSGI config for jewerly_catalog project.
+WSGI config for jewelry_catalog project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'jewerly_catalog.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'jewelry_catalog.settings')
 
 application = get_wsgi_application()
