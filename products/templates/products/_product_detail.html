@@ -2,7 +2,7 @@
 <div class="product-detail-container">
     <!-- Product Badges -->
     <div class="product-detail-badges">
-        {% if product.created_at|date:'Y-m-d' > 'now'|date:'Y-m-d'|date:'Y-m-d -7 days' %}
+        {% if product.is_new %}
         <span class="badge new-badge">
             <i class="fas fa-star"></i>New Arrival
         </span>

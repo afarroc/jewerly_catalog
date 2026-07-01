@@ -3,6 +3,7 @@ from django.db import models
 from django.core.validators import MinValueValidator
 from django.utils.text import slugify
 import logging
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -109,6 +110,12 @@ class Product(models.Model):
         if not self.image:
             return '/static/images/placeholder-product.jpg'
         return self.image
+
+    @property
+    def is_new(self):
+        """Check if product was created in the last 7 days."""
+        from django.utils import timezone
+        return (timezone.now() - self.created_at).days <= 7
 
 
 class ImageUpload(models.Model):
