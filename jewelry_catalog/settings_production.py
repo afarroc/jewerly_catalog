@@ -22,6 +22,9 @@ if os.getenv('DATABASE_URL'):
             ssl_require=True
         )
     }
+    if 'OPTIONS' in DATABASES['default']:
+        for key in ('ssl-mode', 'sslmode'):
+            DATABASES['default']['OPTIONS'].pop(key, None)
 else:
     # Fallback for local development
     DATABASES = {
