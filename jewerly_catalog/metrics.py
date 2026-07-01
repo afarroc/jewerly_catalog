@@ -1,5 +1,5 @@
 """
-Metrics and monitoring utilities for the jewelry catalog application.
+Metrics and monitoring utilities for the jewerly catalog application.
 """
 import time
 import logging
