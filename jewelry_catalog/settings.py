@@ -66,6 +66,7 @@ MIDDLEWARE = [
 
     # Custom monitoring middleware
     'jewelry_catalog.middleware.PerformanceMonitoringMiddleware',
+    'jewelry_catalog.middleware.ErrorLoggingMiddleware',
     'jewelry_catalog.middleware.CacheMonitoringMiddleware',
     'jewelry_catalog.middleware.SecurityMonitoringMiddleware',
     'jewelry_catalog.middleware.RequestLoggingMiddleware',

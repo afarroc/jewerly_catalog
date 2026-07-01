@@ -161,6 +161,28 @@ class SecurityMonitoringMiddleware(MiddlewareMixin):
         return ip
 
 
+import logging
+import traceback
+
+class ErrorLoggingMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+        self.logger = logging.getLogger('django.request')
+
+    def __call__(self, request):
+        try:
+            return self.get_response(request)
+        except Exception as e:
+            self.logger.error(
+                "Unhandled exception on %s %s: %s\n%s",
+                request.method,
+                request.path,
+                str(e),
+                traceback.format_exc()
+            )
+            raise
+
+
 class RequestLoggingMiddleware(MiddlewareMixin):
     """Enhanced request logging middleware."""
 
