@@ -108,9 +108,11 @@ if os.getenv('DATABASE_URL'):
         'default': dj_database_url.config(default=os.getenv('DATABASE_URL'))
     }
     # Fix SSL for MySQL with pymysql
-    if 'OPTIONS' in DATABASES['default'] and 'ssl-mode' in DATABASES['default']['OPTIONS']:
-        DATABASES['default']['OPTIONS']['ssl'] = {'ssl': True}
-        del DATABASES['default']['OPTIONS']['ssl-mode']
+    if 'OPTIONS' in DATABASES['default']:
+        if 'ssl-mode' in DATABASES['default']['OPTIONS']:
+            del DATABASES['default']['OPTIONS']['ssl-mode']
+        if DATABASES['default'].get('ENGINE') == 'django.db.backends.mysql':
+            DATABASES['default']['OPTIONS']['ssl'] = True
 else:
     # Base de datos MySQL para desarrollo local
     DATABASES = {
